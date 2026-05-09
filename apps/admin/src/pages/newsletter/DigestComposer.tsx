@@ -82,66 +82,122 @@ export default function DigestComposer() {
         <html>
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+          <title>${subject}</title>
           <style>
             @media only screen and (max-width: 600px) {
-              .container { width: 100% !important; padding: 10px !important; }
-              .article-title { font-size: 20px !important; }
+              .container { width: 100% !important; padding: 0 !important; }
+              .content-padding { padding: 30px 20px !important; }
+              .article-title { font-size: 22px !important; }
+              .header-logo { width: 100px !important; }
+              .hero-text { font-size: 28px !important; }
             }
           </style>
         </head>
-        <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9fafb;">
             <tr>
-              <td align="center" style="padding: 20px 0;">
-                <table class="container" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+              <td align="center" style="padding: 40px 10px;">
+                <!-- Main Container -->
+                <table class="container" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;">
+                  <!-- Header -->
                   <tr>
-                    <td align="center" style="padding: 40px 40px 20px 40px; border-bottom: 1px solid #f0f0f0;">
-                      <img src="${LOGO_URL}" alt="KPH Logo" width="120" style="display: block; height: auto; border: 0;" />
+                    <td align="center" style="padding: 40px 40px 0 40px;">
+                      <img src="${LOGO_URL}" alt="KPH Logo" width="120" class="header-logo" style="display: block; height: auto; border: 0;" />
+                      <div style="margin-top: 30px; height: 1px; width: 60px; background-color: #8B0000; opacity: 0.2;"></div>
                     </td>
                   </tr>
+
+                  <!-- Hero Section -->
                   <tr>
-                    <td style="padding: 40px 40px 20px 40px;">
-                      <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 10px; font-weight: 900; color: #8B0000; margin: 0 0 10px 0;">WEEKLY INTELLIGENCE RECAP</p>
-                      <h1 style="font-family: 'Georgia', serif; font-size: 32px; font-weight: 900; margin: 0; color: #1a1a1a; line-height: 1.2;">${subject}</h1>
-                      <p style="color: #666; font-size: 16px; margin: 15px 0 0 0; line-height: 1.5;">Essential political insights and breaking analysis from the heart of Kwara State.</p>
+                    <td class="content-padding" style="padding: 40px 60px 40px 60px;">
+                      <p style="text-transform: uppercase; letter-spacing: 0.25em; font-size: 11px; font-weight: 800; color: #8B0000; margin: 0 0 16px 0; font-family: 'Inter', system-ui, sans-serif;">Weekly Intelligence</p>
+                      <h1 class="hero-text" style="font-family: 'Georgia', serif; font-size: 36px; font-weight: 900; margin: 0; color: #0f172a; line-height: 1.1; letter-spacing: -0.02em; font-style: italic;">${subject}</h1>
+                      <p style="color: #475569; font-size: 17px; margin: 20px 0 0 0; line-height: 1.6; font-weight: 400;">
+                        Essential political reporting and investigative analysis from Kwara's leading intelligence center.
+                      </p>
                     </td>
                   </tr>
+
+                  <!-- Articles List -->
                   <tr>
-                    <td style="padding: 20px 40px 40px 40px;">
-                      ${currentArticlesData.map((article: any) => `
-                        <div style="margin-bottom: 50px; padding-bottom: 20px;">
+                    <td class="content-padding" style="padding: 0 60px 40px 60px;">
+                      ${currentArticlesData.map((article: any, index: number) => `
+                        <!-- Article ${index + 1} -->
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 48px;">
                           ${(article.image_url || article.imageUrl) ? `
-                            <a href="https://kph.ng/article/${article.id}" style="text-decoration: none;">
-                              <img src="${article.image_url || article.imageUrl}" style="width: 100%; height: auto; border-radius: 12px; margin-bottom: 20px; display: block;" />
-                            </a>
-                          ` : ''}
-                          <p style="color: #8B0000; text-transform: uppercase; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; margin: 0 0 8px 0;">${article.category}</p>
-                          <h2 class="article-title" style="font-family: 'Georgia', serif; font-size: 24px; font-weight: 800; margin: 0 0 12px 0; color: #1a1a1a; line-height: 1.3;">
-                            <a href="https://kph.ng/article/${article.id}" style="color: #1a1a1a; text-decoration: none;">${article.title}</a>
-                          </h2>
-                          <p style="color: #4a4a4a; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
-                            ${(article.content || '').replace(/<[^>]*>/g, '').substring(0, 220)}...
-                          </p>
-                          <table border="0" cellpadding="0" cellspacing="0">
                             <tr>
-                              <td style="background-color: #8B0000; border-radius: 4px;">
-                                <a href="https://kph.ng/article/${article.id}" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Read Full Analysis</a>
+                              <td style="padding-bottom: 24px;">
+                                <a href="https://www.kwarapoliticalhangout.com.ng/article/${article.id}" style="text-decoration: none;">
+                                  <img src="${article.image_url || article.imageUrl}" alt="${article.title}" style="width: 100%; height: auto; border-radius: 16px; display: block; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.05);" />
+                                </a>
                               </td>
                             </tr>
-                          </table>
-                        </div>
+                          ` : ''}
+                          <tr>
+                            <td>
+                              <span style="background-color: #fef2f2; color: #8B0000; text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 6px; display: inline-block; margin-bottom: 12px; border: 1px solid #fee2e2;">
+                                ${article.category}
+                              </span>
+                              <h2 class="article-title" style="font-family: 'Georgia', serif; font-size: 26px; font-weight: 800; margin: 0 0 14px 0; color: #0f172a; line-height: 1.3; letter-spacing: -0.01em;">
+                                <a href="https://www.kwarapoliticalhangout.com.ng/article/${article.id}" style="color: #0f172a; text-decoration: none;">${article.title}</a>
+                              </h2>
+                              <p style="color: #334155; font-size: 15.5px; line-height: 1.7; margin: 0 0 24px 0; font-weight: 400;">
+                                ${(article.excerpt || article.content || '').replace(/<[^>]*>/g, '').substring(0, 180)}...
+                              </p>
+                              <table border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                  <td align="center" style="background-color: #0f172a; border-radius: 12px; transition: all 0.2s ease;">
+                                    <a href="https://www.kwarapoliticalhangout.com.ng/article/${article.id}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">Read Briefing</a>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                          ${index < currentArticlesData.length - 1 ? `
+                            <tr>
+                              <td style="padding-top: 48px;">
+                                <div style="height: 1px; background-color: #f1f5f9;"></div>
+                              </td>
+                            </tr>
+                          ` : ''}
+                        </table>
                       `).join('')}
                     </td>
                   </tr>
+
+                  <!-- Footer -->
                   <tr>
-                    <td style="background-color: #fafafa; padding: 40px; text-align: center; border-top: 1px solid #f0f0f0;">
-                      <p style="font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #999; margin: 0 0 15px 0;">Kwara Political Hangout • Intelligence Center</p>
-                      <p style="color: #666; font-size: 12px; line-height: 1.5; margin: 0;">
-                        Ilorin, Kwara State, Nigeria.
-                        <br><br>
-                        You are receiving this because you subscribed to KPH Weekly Updates.
-                        <br><br>
-                        <a href="{{unsubscribe_link}}" style="color: #8B0000; text-decoration: underline; font-weight: bold;">Unsubscribe from this list</a>
+                    <td style="background-color: #f8fafc; padding: 48px 60px; text-align: center; border-top: 1px solid #f1f5f9;">
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                          <td align="center" style="padding-bottom: 30px;">
+                            <img src="${LOGO_URL}" alt="KPH Logo" width="80" style="display: block; opacity: 0.5;" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; color: #64748b; margin: 0 0 16px 0;">Kwara Political Hangout • Intelligence Center</p>
+                            <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; font-weight: 400;">
+                              Ilorin, Kwara State, Nigeria.
+                              <br><br>
+                              You are receiving this intelligence report because you subscribed to the KPH network. This information is intended for the recipient and may contain priority analysis.
+                              <br><br>
+                              <a href="{{unsubscribe_link}}" style="color: #8B0000; text-decoration: none; font-weight: 800; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; border-bottom: 1px solid rgba(139,0,0,0.2);">Terminate Subscription</a>
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                
+                <!-- Social Links Placeholder -->
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="margin-top: 30px;">
+                  <tr>
+                    <td align="center">
+                      <p style="color: #94a3b8; font-size: 11px; font-weight: 500;">
+                        &copy; ${new Date().getFullYear()} KPH News. All rights reserved.
                       </p>
                     </td>
                   </tr>
@@ -320,30 +376,60 @@ export default function DigestComposer() {
                  <div className="h-2 w-2 rounded-full bg-emerald-400" />
               </div>
            </div>
-           <div className="p-8 bg-white h-[600px] overflow-auto">
+           <div className="p-0 bg-[#f9fafb] h-[700px] overflow-auto">
               {/* Preview Content */}
-              <div className="max-w-[500px] mx-auto space-y-8">
-                 <img src={LOGO_URL} alt="Logo" className="h-10 mx-auto" />
-                 <div className="text-center space-y-2">
-                    <p className="text-[9px] font-black tracking-widest text-kph-red uppercase">Weekly Intelligence Recap</p>
-                    <h1 className="font-serif text-3xl font-bold text-kph-charcoal leading-tight">{subject}</h1>
+              <div className="max-w-[600px] mx-auto bg-white my-8 rounded-[24px] shadow-sm ring-1 ring-slate-200 overflow-hidden">
+                 <div className="p-10 pb-0 text-center">
+                    <img src={LOGO_URL} alt="Logo" className="h-10 mx-auto" />
+                    <div className="mt-8 h-px w-12 bg-red-800/20 mx-auto" />
                  </div>
-                 <div className="space-y-12">
-                    {selectedArticlesData.map((a: any) => (
-                      <div key={a.id} className="space-y-4">
-                        {(a.image_url || a.imageUrl) && <img src={a.image_url || a.imageUrl} className="w-full rounded-xl" />}
-                        <div className="space-y-2">
-                          <p className="text-[9px] font-black tracking-widest text-kph-red uppercase">{a.category}</p>
-                          <h2 className="font-serif text-xl font-bold text-kph-charcoal">{a.title}</h2>
-                          <p className="text-sm text-neutral-600 leading-relaxed line-clamp-3">
-                            {(a.content || '').replace(/<[^>]*>/g, '').substring(0, 150)}...
+                 
+                 <div className="p-10 lg:p-14 space-y-4">
+                    <p className="text-[10px] font-black tracking-[0.25em] text-red-800 uppercase">Weekly Intelligence</p>
+                    <h1 className="font-serif text-4xl font-bold text-slate-950 leading-tight italic">{subject}</h1>
+                    <p className="text-slate-600 text-lg leading-relaxed">
+                      Essential political reporting and investigative analysis from Kwara's leading intelligence center.
+                    </p>
+                 </div>
+
+                 <div className="px-10 lg:px-14 pb-14 space-y-16">
+                    {selectedArticlesData.map((a: any, idx: number) => (
+                      <div key={a.id} className="space-y-6">
+                        {(a.image_url || a.imageUrl) && (
+                          <img src={a.image_url || a.imageUrl} className="w-full rounded-2xl shadow-sm border border-slate-100" />
+                        )}
+                        <div className="space-y-3">
+                          <span className="inline-block px-2.5 py-1 bg-red-50 text-red-800 text-[10px] font-black uppercase tracking-widest rounded-md border border-red-100">
+                            {a.category}
+                          </span>
+                          <h2 className="font-serif text-2xl font-bold text-slate-950">{a.title}</h2>
+                          <p className="text-slate-600 leading-relaxed line-clamp-3">
+                            {(a.excerpt || a.content || '').replace(/<[^>]*>/g, '').substring(0, 180)}...
                           </p>
+                          <div className="pt-4">
+                            <span className="inline-block px-8 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl">
+                              Read Briefing
+                            </span>
+                          </div>
                         </div>
+                        {idx < selectedArticlesData.length - 1 && <div className="pt-8 h-px bg-slate-100 w-full" />}
                       </div>
                     ))}
                  </div>
+
+                 <div className="bg-slate-50 p-12 text-center border-t border-slate-100">
+                    <img src={LOGO_URL} alt="Logo" className="h-8 mx-auto opacity-40 grayscale mb-8" />
+                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-4">Kwara Political Hangout • Intelligence Center</p>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+                      Ilorin, Kwara State, Nigeria.<br /><br />
+                      You are receiving this intelligence report because you subscribed to the KPH network.
+                    </p>
+                    <div className="mt-8">
+                       <span className="text-[10px] font-black text-red-800 uppercase border-b border-red-800/20 pb-1 cursor-pointer">Terminate Subscription</span>
+                    </div>
+                 </div>
               </div>
-           </div>
+           </div>v>
         </Card>
       )}
     </div>
