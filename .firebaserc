@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "kph-dev",
+    "staging": "kph-staging",
+    "production": "kph-prod"
+  }
+}

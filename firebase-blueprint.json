@@ -1,0 +1,109 @@
+{
+  "entities": {
+    "Article": {
+      "title": "Article",
+      "description": "A news article or political analysis post",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Article headline" },
+        "content": { "type": "string", "description": "Main body text" },
+        "authorId": { "type": "string", "description": "UID of the author" },
+        "authorName": { "type": "string", "description": "Display name of the author" },
+        "category": { "type": "string", "description": "News category (e.g., Politics, Economy)" },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "authorId", "category", "status", "createdAt", "updatedAt"]
+    },
+    "Person": {
+      "title": "Person",
+      "description": "A political figure or prominent individual in Kwara",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "bio": { "type": "string" },
+        "role": { "type": "string", "description": "Current position or title" },
+        "party": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" }
+      },
+      "required": ["name", "bio"]
+    },
+    "Writer": {
+      "title": "Writer",
+      "description": "A user with writing permissions and profile details",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "bio": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "role": { "type": "string", "enum": ["contributor", "editor", "admin"] }
+      },
+      "required": ["userId", "displayName", "role"]
+    },
+    "NewsletterSubscription": {
+      "title": "Newsletter Subscription",
+      "description": "Email subscription for KPH news updates",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "subscribedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "subscribedAt"]
+    },
+    "ErrorLog": {
+      "title": "Error Log",
+      "description": "System and security error logs",
+      "type": "object",
+      "properties": {
+        "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "message": { "type": "string" },
+        "context": { "type": "object" },
+        "userId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["severity", "message", "timestamp"]
+    },
+    "NewsletterCampaign": {
+      "title": "Newsletter Campaign",
+      "description": "A sent newsletter to subscribers",
+      "type": "object",
+      "properties": {
+        "subject": { "type": "string" },
+        "articleIds": { "type": "array", "items": { "type": "string" } },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "recipientCount": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["subject", "articleIds", "sentAt", "recipientCount", "status"]
+    }
+  },
+  "firestore": {
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Collection of all news articles"
+    },
+    "/people/{personId}": {
+      "schema": "Person",
+      "description": "Database of political figures"
+    },
+    "/writers/{writerId}": {
+      "schema": "Writer",
+      "description": "User profiles for authors and staff"
+    },
+    "/newsletter/{subId}": {
+      "schema": "NewsletterSubscription",
+      "description": "Email newsletter subscribers"
+    },
+    "/newsletters/{campaignId}": {
+      "schema": "NewsletterCampaign",
+      "description": "History of sent newsletter campaigns"
+    },
+    "/errorLogs/{logId}": {
+      "schema": "ErrorLog",
+      "description": "System error and security logs"
+    }
+  }
+}

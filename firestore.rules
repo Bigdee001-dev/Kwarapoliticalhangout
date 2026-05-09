@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- 3. Primitive Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    
+    // Admin check: Hardcoded bootstrap email OR presence in admins collection
+    function isAdmin() { 
+      return isSignedIn() && (
+        request.auth.token.email == 'danielajibade50@gmail.com' ||
+        request.auth.token.email == 'abdulrahmanadebambo@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Editor check: Role must be 'editor' or 'admin'
+    function isEditor() {
+      return isSignedIn() && (
+        isAdmin() || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor'
+      );
+    }
+
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // --- 4. Validation Blueprints ---
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'status']) &&
+             data.uid == request.auth.uid &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.email == request.auth.token.email &&
+             data.role in ['reader', 'writer', 'editor', 'admin'] &&
+             data.status in ['active', 'pending', 'suspended'];
+    }
+
+    function isValidArticle(data) {
+      return data.keys().hasAll(['title', 'content', 'authorId', 'category', 'status', 'createdAt', 'updatedAt']) &&
+             data.title is string && data.title.size() <= 300 &&
+             data.content is string && data.content.size() <= 500000 &&
+             data.authorId == request.auth.uid &&
+             data.category is string && data.category.size() <= 100 &&
+             data.status in ['draft', 'pending', 'published', 'rejected', 'archived'];
+    }
+
+    // --- 5. Collection Match Blocks ---
+
+    // USERS
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isEditor());
+      allow list: if isEditor(); 
+      
+      allow create: if isSignedIn() && (
+        isAdmin() || (
+          isValidUser(incoming()) && 
+          incoming().role in ['reader', 'writer'] &&
+          (
+            (incoming().role == 'writer' && incoming().status == 'pending') ||
+            (incoming().role == 'reader' && incoming().status == 'active')
+          ) &&
+          userId == request.auth.uid
+        )
+      );
+      
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          isOwner(userId) && 
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'bio', 'updatedAt']) &&
+          incoming().updatedAt == request.time &&
+          incoming().displayName is string && incoming().displayName.size() <= 100
+        )
+      );
+    }
+
+    // ARTICLES
+    match /articles/{articleId} {
+      allow get: if (existing().status == 'published') || (isSignedIn() && (isOwner(existing().authorId) || isEditor()));
+      allow list: if (resource.data.status == 'published') || (isSignedIn() && (resource.data.authorId == request.auth.uid || isEditor()));
+
+      allow create: if isSignedIn() && 
+                    isValidArticle(incoming()) && 
+                    incoming().createdAt == request.time &&
+                    incoming().updatedAt == request.time &&
+                    isValidId(articleId);
+
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          // Authors can edit their own drafts
+          isOwner(existing().authorId) && 
+          existing().status in ['draft', 'rejected', 'pending'] &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'content', 'category', 'excerpt', 'imageUrl', 'updatedAt', 
+            'wordCount', 'readTime', 'tags', 'status'
+          ]) &&
+          incoming().updatedAt == request.time &&
+          incoming().authorId == existing().authorId &&
+          isValidArticle(incoming())
+        ) || (
+          // Editors can review and publish
+          isEditor() && 
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'feedback', 'publishedAt', 'updatedAt']) &&
+          incoming().updatedAt == request.time
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // PEOPLE
+    match /people/{personId} {
+      allow read: if isEditor() || isAdmin(); // Restrict public access if needed, or keep 'if true' if public
+      allow write: if isEditor() && isValidId(personId);
+    }
+
+    // NEWSLETTER
+    match /newsletter/{subId} {
+      allow create: if incoming().keys().hasAll(['email', 'subscribedAt']) && 
+                      incoming().email is string &&
+                      incoming().email.size() <= 200 &&
+                      isValidId(subId);
+      allow read, update, delete: if isEditor();
+    }
+
+    // NEWSLETTER CAMPAIGNS
+    match /newsletters/{campaignId} {
+      allow read, write: if isEditor();
+    }
+
+    match /newsletter_digests/{digestId} {
+      allow read, write: if isEditor();
+    }
+
+    // ACTIVITY LOGS
+    match /activityLogs/{logId} {
+      allow read: if isEditor();
+      allow create: if isSignedIn();
+    }
+
+    // SETTINGS & ADS
+    match /settings/{docId} {
+      allow read: if isSignedIn(); // Restrict public access to settings
+      allow write: if isAdmin();
+    }
+
+    // MESSAGES
+    match /messages/{msgId} {
+      allow create: if incoming().keys().hasAll(['name', 'email', 'message', 'createdAt', 'status']) &&
+                      incoming().email is string &&
+                      incoming().name is string &&
+                      incoming().message.size() <= 5000 &&
+                      isValidId(msgId);
+      allow read, update, delete: if isEditor();
+    }
+
+    // ERROR LOGS
+    match /errorLogs/{logId} {
+      allow create: if isSignedIn(); // Only logged in users/apps can log errors
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}
+

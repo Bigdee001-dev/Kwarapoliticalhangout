@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/article/:id",
+      "destination": "https://ajqzyygzgjrydxilzzto.functions.supabase.co/render-article/:id"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
