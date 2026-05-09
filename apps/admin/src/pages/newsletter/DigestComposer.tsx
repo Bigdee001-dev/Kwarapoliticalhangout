@@ -429,7 +429,7 @@ export default function DigestComposer() {
                     </div>
                  </div>
               </div>
-           </div>v>
+           </div>
         </Card>
       )}
     </div>
