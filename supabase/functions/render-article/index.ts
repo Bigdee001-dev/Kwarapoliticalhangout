@@ -105,7 +105,7 @@ serve(async (req: Request) => {
     // Fetch article from Supabase
     const { data: article, error } = await supabase
       .from('articles')
-      .select('id, title, excerpt, image_url, category, date')
+      .select('id, title, excerpt, image_url, imageUrl, category, date')
       .eq('id', articleId)
       .single()
 
@@ -117,7 +117,7 @@ serve(async (req: Request) => {
     const title = `${article.title} | KPH News`
     const description = article.excerpt
       || `Read the latest ${article.category || 'political'} news from Kwara State.`
-    const image = article.image_url || DEFAULT_IMAGE
+    const image = article.image_url || article.imageUrl || DEFAULT_IMAGE
     const canonical = `${SITE_URL}/article/${articleId}`
 
     const html = buildMetaHtml(title, description, image, canonical)

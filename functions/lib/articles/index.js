@@ -22,6 +22,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.incrementArticleViews = exports.improveArticleHeadline = exports.suggestArticleTags = exports.scoreArticleQuality = exports.generateArticleSEO = exports.onArticleStatusChanged = exports.generateArticleSummary = void 0;
 const functions = __importStar(require("firebase-functions/v1"));
@@ -236,4 +239,5 @@ exports.incrementArticleViews = functions.region('europe-west3').https.onCall((0
     });
     return { success: true };
 }));
+__exportStar(require("./renderer"), exports);
 //# sourceMappingURL=index.js.map

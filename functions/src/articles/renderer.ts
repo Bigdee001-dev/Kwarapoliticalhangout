@@ -49,7 +49,7 @@ export const renderArticle = functions.https.onRequest(async (req, res) => {
     // 3. Prepare Metadata
     const title = `${article.title} | KPH News`;
     const description = article.excerpt || 'Read the latest political news from Kwara State.';
-    const image = article.image_url || 'https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=630&auto=format&fit=crop';
+    const image = article.image_url || article.imageUrl || 'https://res.cloudinary.com/dohuj4mx9/image/upload/v1778018185/hd_restoration_result_image_6_xejnhg.png';
     const url = `https://www.kwarapoliticalhangout.com.ng/article/${articleId}`;
 
     // 4. Inject Meta Tags

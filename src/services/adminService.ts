@@ -251,6 +251,7 @@ export const AdminService = {
         category: article.category,
         author_id: user.id,
         image_url: article.imageUrl || article.featuredImage,
+        imageUrl: article.imageUrl || article.featuredImage, // Support both column naming conventions
         video_url: article.videoUrl,
         source_url: article.sourceUrl,
         source_name: article.sourceName,
