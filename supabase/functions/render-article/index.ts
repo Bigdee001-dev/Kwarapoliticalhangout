@@ -26,6 +26,14 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
   const img = esc(image)
   const url = esc(canonical)
 
+  const imageTags = img ? `
+  <meta property="og:image" content="${img}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${t}">
+  <meta name="twitter:image" content="${img}">
+  <meta name="twitter:image:alt" content="${t}">` : ''
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,11 +55,7 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
   <meta property="og:site_name" content="KPH News">
   <meta property="og:url" content="${url}">
   <meta property="og:title" content="${t}">
-  <meta property="og:description" content="${d}">
-  <meta property="og:image" content="${img}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="${t}">
+  <meta property="og:description" content="${d}">${imageTags}
 
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image">
@@ -59,8 +63,6 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
   <meta name="twitter:url" content="${url}">
   <meta name="twitter:title" content="${t}">
   <meta name="twitter:description" content="${d}">
-  <meta name="twitter:image" content="${img}">
-  <meta name="twitter:image:alt" content="${t}">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png"
@@ -81,7 +83,7 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
   <!-- Fallback content for crawlers that render the body -->
   <h1>${t}</h1>
   <p>${d}</p>
-  <img src="${img}" alt="${t}" width="1200" height="630">
+  ${img ? `<img src="${img}" alt="${t}" width="1200" height="630">` : ''}
   <a href="${url}">Read the full article on KPH News</a>
 </body>
 </html>`
@@ -128,9 +130,10 @@ serve(async (req: Request) => {
     }
 
     // Absolute fallback if no image is found in metadata or content
-    // We use the site's favicon/logo as a last resort instead of a placeholder image
+    // Per user request, we do not add a static fallback image if none is found.
+    // If image is empty, the buildMetaHtml will handle it (likely resulting in no image preview)
     if (!image) {
-      image = "https://res.cloudinary.com/dohuj4mx9/image/upload/v1778018185/hd_restoration_result_image_6_xejnhg.png"
+      image = ""
     }
 
     const title = `${article.title} | KPH News`
