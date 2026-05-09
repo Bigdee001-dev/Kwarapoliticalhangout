@@ -6,8 +6,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ""
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || ""
 const SITE_URL = "https://www.kwarapoliticalhangout.com.ng"
 
-// Default fallback image for articles without one
-const DEFAULT_IMAGE = "https://res.cloudinary.com/dohuj4mx9/image/upload/v1778018185/hd_restoration_result_image_6_xejnhg.png"
+// Default fallback logic is now handled dynamically within the serve function
 
 /**
  * Builds a complete, self-contained HTML page with article-specific
@@ -105,7 +104,7 @@ serve(async (req: Request) => {
     // Fetch article from Supabase
     const { data: article, error } = await supabase
       .from('articles')
-      .select('id, title, excerpt, image_url, imageUrl, category, date')
+      .select('id, title, excerpt, content, image_url, imageUrl, category, date')
       .eq('id', articleId)
       .single()
 
@@ -114,10 +113,29 @@ serve(async (req: Request) => {
       return Response.redirect(SITE_URL, 302)
     }
 
+    // Extraction logic for the image
+    // 1. Check primary image_url
+    // 2. Check alternative imageUrl
+    // 3. Try to extract first image from content
+    let image = article.image_url || article.imageUrl || ""
+    
+    if (!image && article.content) {
+      // Simple regex to find the first <img> src in the content
+      const imgMatch = article.content.match(/<img.*?src=["'](.*?)["']/i)
+      if (imgMatch && imgMatch[1]) {
+        image = imgMatch[1]
+      }
+    }
+
+    // Absolute fallback if no image is found in metadata or content
+    // We use the site's favicon/logo as a last resort instead of a placeholder image
+    if (!image) {
+      image = "https://res.cloudinary.com/dohuj4mx9/image/upload/v1778018185/hd_restoration_result_image_6_xejnhg.png"
+    }
+
     const title = `${article.title} | KPH News`
     const description = article.excerpt
       || `Read the latest ${article.category || 'political'} news from Kwara State.`
-    const image = article.image_url || article.imageUrl || DEFAULT_IMAGE
     const canonical = `${SITE_URL}/article/${articleId}`
 
     const html = buildMetaHtml(title, description, image, canonical)
