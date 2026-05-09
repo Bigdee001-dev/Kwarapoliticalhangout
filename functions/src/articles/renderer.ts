@@ -74,10 +74,19 @@ export const renderArticle = functions.https.onRequest(async (req, res) => {
       <meta property="twitter:image" content="${image}">
     `;
 
-    // Replace the placeholder in index.html
-    const finalHtml = html.replace('<!-- PREVIEW_PLACEHOLDER -->', metaTags);
+    // 5. Strip existing meta tags to prevent crawler confusion
+    // We remove title, description, and any og: or twitter: tags
+    let finalHtml = html
+      .replace(/<title>.*?<\/title>/gi, '')
+      .replace(/<meta name=["']description["'].*?>/gi, '')
+      .replace(/<meta property=["']og:.*?["'].*?>/gi, '')
+      .replace(/<meta name=["']twitter:.*?["'].*?>/gi, '')
+      .replace(/<meta property=["']twitter:.*?["'].*?>/gi, '');
 
-    // 5. Send the modified HTML
+    // Replace the placeholder
+    finalHtml = finalHtml.replace('<!-- PREVIEW_PLACEHOLDER -->', metaTags);
+
+    // 6. Send the modified HTML
     res.set('Cache-Control', 'public, max-age=3600, s-maxage=7200');
     res.status(200).send(finalHtml);
 

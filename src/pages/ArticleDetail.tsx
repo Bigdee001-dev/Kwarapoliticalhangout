@@ -6,7 +6,7 @@ import {
   MessageSquare, Loader2, List, ExternalLink, Send, Check, 
   ChevronLeft, MoreHorizontal, ShieldAlert, Clock, User,
   Twitter, Facebook, Linkedin, Link as LinkIcon, Eye,
-  ArrowRight, Heart, UserCircle2
+  ArrowRight, Heart, UserCircle2, MessageCircle
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Logo from '../components/Logo';
@@ -310,6 +310,7 @@ const ArticleDetail: React.FC = () => {
                                {[
                                  { icon: Twitter, color: 'hover:text-black', link: `https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(window.location.href)}` },
                                  { icon: Facebook, color: 'hover:text-[#1877F2]', link: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}` },
+                                 { icon: MessageCircle, color: 'hover:text-[#25D366]', link: `https://wa.me/?text=${encodeURIComponent(article.title + ' ' + window.location.href)}` },
                                  { icon: Linkedin, color: 'hover:text-[#0A66C2]', link: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}` }
                                ].map((social, i) => (
                                  <a key={i} href={social.link} target="_blank" rel="noreferrer" className={`w-9 h-9 sm:w-10 h-10 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 hover:bg-zinc-50 transition-colors ${social.color}`}><social.icon size={14} /></a>
