@@ -15,8 +15,8 @@ interface SEOProps {
 const SEO: React.FC<SEOProps> = ({
   title,
   description,
-  image = 'https://res.cloudinary.com/dohuj4mx9/image/upload/v1778018185/hd_restoration_result_image_6_xejnhg.png',
-  imageAlt = 'KPH News - Kwara Political Hangout',
+  image,
+  imageAlt,
   url,
   type = 'website',
   author,
@@ -46,22 +46,25 @@ const SEO: React.FC<SEOProps> = ({
     // 4. Update Open Graph (Facebook/LinkedIn/WhatsApp)
     updateMeta('og:title', title, 'property');
     updateMeta('og:description', description, 'property');
-    updateMeta('og:image', image, 'property');
-    updateMeta('og:image:alt', imageAlt, 'property');
+    if (image) {
+      updateMeta('og:image', image, 'property');
+      updateMeta('og:image:alt', imageAlt || 'KPH News', 'property');
+      // Ensure image dimensions are standard for cards
+      updateMeta('og:image:width', '1200', 'property');
+      updateMeta('og:image:height', '630', 'property');
+    }
     updateMeta('og:url', fullUrl, 'property');
     updateMeta('og:type', type, 'property');
     updateMeta('og:site_name', 'KPH News', 'property');
-
-    // Ensure image dimensions are standard for cards
-    updateMeta('og:image:width', '1200', 'property');
-    updateMeta('og:image:height', '630', 'property');
 
     // 5. Update Twitter Cards
     updateMeta('twitter:card', 'summary_large_image', 'property');
     updateMeta('twitter:title', title, 'property');
     updateMeta('twitter:description', description, 'property');
-    updateMeta('twitter:image', image, 'property');
-    updateMeta('twitter:image:alt', imageAlt, 'property');
+    if (image) {
+      updateMeta('twitter:image', image, 'property');
+      updateMeta('twitter:image:alt', imageAlt || 'KPH News', 'property');
+    }
 
     // 6. JSON-LD Structured Data
     const structuredData = {
