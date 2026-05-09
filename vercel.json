@@ -5,7 +5,7 @@
       "destination": "https://ajqzyygzgjrydxilzzto.functions.supabase.co/render-article/:id"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!article|sitemap.xml|robots.txt|assets/).*)",
       "destination": "/index.html"
     }
   ]
