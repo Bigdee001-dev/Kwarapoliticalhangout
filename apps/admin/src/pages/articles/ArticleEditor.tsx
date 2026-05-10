@@ -81,87 +81,69 @@ const ArticleEditor: React.FC = () => {
   const quillRef = React.useRef<any>(null);
 
   const imageHandler = React.useCallback(() => {
-    const choice = window.confirm("Click 'OK' to Upload a file, or 'Cancel' to Paste an Image URL.");
-    
-    if (choice) {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'file');
-      input.setAttribute('accept', 'image/*');
-      input.click();
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
 
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (!file) return;
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
 
-        const folder = id || 'temp';
-        const toastId = toast.loading('Uploading image...');
-        try {
-          const url = await uploadToImageKit(file, folder);
-          const quill = quillRef.current.getEditor();
-          const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'image', url);
-          toast.success('Image uploaded successfully', { id: toastId });
-        } catch (error: any) {
-          console.error('Image upload failed:', error);
-          toast.error(`Image upload failed: ${error.message || 'Unknown error'}`, { id: toastId });
-        }
-      };
-    } else {
-      const url = window.prompt("Paste the Image URL below:");
-      if (url && url.startsWith('http')) {
+      const folder = id || 'temp';
+      const toastId = toast.loading('Uploading image asset...');
+      try {
+        const url = await uploadToImageKit(file, folder);
         const quill = quillRef.current.getEditor();
         const range = quill.getSelection(true);
         quill.insertEmbed(range.index, 'image', url);
-      } else if (url) {
-        toast.error("Invalid image URL. Must start with http/https.");
+        // Add a newline after the image for better flow
+        quill.insertText(range.index + 1, '\n');
+        toast.success('Image integrated successfully', { id: toastId });
+      } catch (error: any) {
+        console.error('Image upload failed:', error);
+        toast.error(`Image upload failed: ${error.message || 'Unknown error'}`, { id: toastId });
       }
-    }
+    };
   }, [id]);
 
   const videoHandler = React.useCallback(() => {
-    const choice = window.confirm("Click 'OK' to Upload a video, or 'Cancel' to Paste a Video URL.");
-    
-    if (choice) {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'file');
-      input.setAttribute('accept', 'video/*');
-      input.click();
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'video/*');
+    input.click();
 
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (!file) return;
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
 
-        const folder = id || 'temp';
-        const toastId = toast.loading('Uploading video...');
-        try {
-          const url = await uploadToImageKit(file, folder);
-          const quill = quillRef.current.getEditor();
-          const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'video', url);
-          toast.success('Video uploaded successfully', { id: toastId });
-        } catch (error: any) {
-          console.error('Video upload failed:', error);
-          toast.error(`Video upload failed: ${error.message || 'Unknown error'}`, { id: toastId });
-        }
-      };
-    } else {
-      const url = window.prompt("Paste the Video URL below:");
-      if (url && url.startsWith('http')) {
+      const folder = id || 'temp';
+      const toastId = toast.loading('Uploading video asset...');
+      try {
+        const url = await uploadToImageKit(file, folder);
         const quill = quillRef.current.getEditor();
         const range = quill.getSelection(true);
         quill.insertEmbed(range.index, 'video', url);
-      } else if (url) {
-        toast.error("Invalid video URL. Must start with http/https.");
+        // Add a newline after the video
+        quill.insertText(range.index + 1, '\n');
+        toast.success('Video integrated successfully', { id: toastId });
+      } catch (error: any) {
+        console.error('Video upload failed:', error);
+        toast.error(`Video upload failed: ${error.message || 'Unknown error'}`, { id: toastId });
       }
-    }
+    };
   }, [id]);
 
   const modules = React.useMemo(() => ({
     toolbar: {
       container: [
         [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-        [{'list': 'ordered'}, {'list': 'bullet'}],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        ['blockquote', 'code-block'],
+        [{'list': 'ordered'}, {'list': 'bullet'}, { 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
         ['link', 'image', 'video'],
         ['clean']
       ],
@@ -170,6 +152,9 @@ const ArticleEditor: React.FC = () => {
         video: videoHandler
       }
     },
+    clipboard: {
+      matchVisual: false,
+    }
   }), [imageHandler, videoHandler]);
 
   useEffect(() => {
@@ -455,17 +440,36 @@ const ArticleEditor: React.FC = () => {
           border-bottom-right-radius: 0.5rem;
           background: #fafafa;
           font-family: var(--font-sans);
-          font-size: 1.1rem;
+          font-size: 1.15rem;
+          line-height: 1.8;
+        }
+        .quill-wrapper .ql-editor {
+          min-height: 500px;
+          padding: 2rem;
+        }
+        .quill-wrapper .ql-editor p {
+          margin-bottom: 1.5rem;
+        }
+        .quill-wrapper .ql-editor img {
+          border-radius: 0.75rem;
+          margin: 2rem 0;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
         .quill-wrapper .ql-toolbar {
           border-top-left-radius: 0.5rem;
           border-top-right-radius: 0.5rem;
           background: white;
           border-color: #e5e5e5;
+          padding: 1rem;
+          position: sticky;
+          top: 0;
+          z-index: 10;
         }
         .quill-wrapper .ql-container.ql-snow {
           border-color: #e5e5e5;
-          min-height: 500px;
+        }
+        .ql-snow .ql-picker.ql-header {
+          width: 120px;
         }
       `}</style>
     </div>
