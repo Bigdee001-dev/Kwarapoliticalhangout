@@ -91,12 +91,30 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
 
 serve(async (req: Request) => {
   const url = new URL(req.url)
+  console.log(`[Request] ${req.method} ${url.pathname}${url.search}`)
 
-  // Extract article ID from path: /render-article/ARTICLE_ID
-  const pathParts = url.pathname.split('/')
-  const articleId = pathParts[pathParts.length - 1]
+  // Extract article ID from path or query param
+  // Path format: /render-article/ARTICLE_ID or /render-article/ARTICLE_ID/
+  let articleId = ""
+  
+  // 1. Check path parts, filtering out empty strings from trailing slashes
+  const pathParts = url.pathname.split('/').filter(Boolean)
+  if (pathParts.length > 0 && pathParts[0] === 'render-article') {
+    articleId = pathParts[pathParts.length - 1]
+  } else if (pathParts.length > 0) {
+    // If it's just /ID (directly on function URL)
+    articleId = pathParts[pathParts.length - 1]
+  }
 
+  // 2. Fallback to query param ?id=...
   if (!articleId || articleId === 'render-article') {
+    articleId = url.searchParams.get('id') || ""
+  }
+
+  console.log(`[ArticleID] Extracted: "${articleId}"`)
+
+  if (!articleId) {
+    console.warn('[Redirect] No articleId found, redirecting to home')
     return Response.redirect(SITE_URL, 302)
   }
 
@@ -104,6 +122,7 @@ serve(async (req: Request) => {
 
   try {
     // Fetch article from Supabase
+    console.log(`[DB] Fetching article ${articleId}...`)
     const { data: article, error } = await supabase
       .from('articles')
       .select('id, title, excerpt, content, image_url, imageUrl, category, date')
@@ -111,33 +130,41 @@ serve(async (req: Request) => {
       .single()
 
     if (error || !article) {
-      console.error('Article fetch error:', error)
+      console.error(`[Error] Article not found or DB error:`, error)
       return Response.redirect(SITE_URL, 302)
     }
 
+    console.log(`[Success] Article found: "${article.title}"`)
+
     // Extraction logic for the image
-    // 1. Check primary image_url
-    // 2. Check alternative imageUrl
-    // 3. Try to extract first image from content
     let image = article.image_url || article.imageUrl || ""
     
     if (!image && article.content) {
-      // Simple regex to find the first <img> src in the content
+      // 1. Try HTML <img> tags
       const imgMatch = article.content.match(/<img.*?src=["'](.*?)["']/i)
       if (imgMatch && imgMatch[1]) {
         image = imgMatch[1]
+        console.log(`[Image] Extracted from HTML: ${image}`)
+      } else {
+        // 2. Try Markdown ![alt](url) tags
+        const mdMatch = article.content.match(/!\[.*?\]\((.*?)\)/i)
+        if (mdMatch && mdMatch[1]) {
+          image = mdMatch[1]
+          console.log(`[Image] Extracted from Markdown: ${image}`)
+        }
       }
     }
 
-    // Absolute fallback if no image is found in metadata or content
-    // Per user request, we do not add a static fallback image if none is found.
-    // If image is empty, the buildMetaHtml will handle it (likely resulting in no image preview)
     if (!image) {
+      console.log(`[Image] No image found for article.`)
       image = ""
+    } else {
+      console.log(`[Image] Final image URL: ${image}`)
     }
 
     const title = `${article.title} | KPH News`
-    const description = article.excerpt
+    const description = (article.excerpt || "") 
+      || (article.content ? article.content.replace(/<[^>]*>/g, '').substring(0, 160) : "")
       || `Read the latest ${article.category || 'political'} news from Kwara State.`
     const canonical = `${SITE_URL}/article/${articleId}`
 
