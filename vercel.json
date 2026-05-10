@@ -2,10 +2,21 @@
   "rewrites": [
     {
       "source": "/article/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|TelegramBot|Slackbot|Discordbot|Googlebot|Bingbot).*"
+        }
+      ],
       "destination": "https://ajqzyygzgjrydxilzzto.functions.supabase.co/render-article/:id"
     },
     {
-      "source": "/((?!article|sitemap.xml|robots.txt|assets/).*)",
+      "source": "/article/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!sitemap.xml|robots.txt|assets/).*)",
       "destination": "/index.html"
     }
   ]
