@@ -15,6 +15,7 @@ import About from './pages/About';
 import SearchResults from './pages/SearchResults';
 import WriterStudio from './pages/WriterStudio';
 import AdminApp from '../apps/admin/src/App';
+import CookieBanner from './components/CookieBanner';
 
 // ScrollToTop component to reset scroll on route change
 const ScrollToTopWrapper = () => {
@@ -93,6 +94,7 @@ const App: React.FC = () => {
           <Route path="/about" element={<About />} />
         </Routes>
       </LayoutWrapper>
+      <CookieBanner />
     </Router>
   );
 };

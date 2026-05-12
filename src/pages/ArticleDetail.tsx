@@ -12,6 +12,8 @@ import {
 import Sidebar from '../components/Sidebar';
 import Logo from '../components/Logo';
 import { NewsService } from '../services/newsService';
+import { AdminService, AdConfig } from '../services/adminService';
+import PopupAdModal from '../components/PopupAdModal';
 import { Article, Comment } from '../types';
 import SEO from '../components/SEO';
 import { toast } from 'sonner';
@@ -22,6 +24,7 @@ const ArticleDetail: React.FC = () => {
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
+  const [adConfig, setAdConfig] = useState<AdConfig | null>(null);
 
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -65,6 +68,10 @@ const ArticleDetail: React.FC = () => {
           const all = await NewsService.getLatestNews(found.category);
           setRelatedArticles(all.filter(a => a.id !== id).slice(0, 3));
         }
+
+        // Load AdConfig for popup
+        const config = await AdminService.getAdConfig();
+        setAdConfig(config);
       }
       setPageLoading(false);
     };
@@ -174,6 +181,12 @@ const ArticleDetail: React.FC = () => {
         author={article.author}
         date={article.date}
         category={article.category}
+      />
+
+      <PopupAdModal 
+        ad={adConfig?.popupAd} 
+        onClose={() => setAdConfig(prev => prev ? { ...prev, popupAd: { ...prev.popupAd, enabled: false } } : null)}
+        onClick={() => AdminService.recordAdClick('popupAd')}
       />
 
       {/* Reading Progress Bar Container */}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Facebook, Twitter, Linkedin, Youtube, ArrowRight, Check, Instagram, Loader2, Image as ImageIcon } from 'lucide-react';
 import ArticleCard from './ArticleCard';
-import { AdminService, AdConfig } from '../services/adminService';
+import { AdminService, AdConfig, getAbsoluteUrl } from '../services/adminService';
 import { NewsService } from '../services/newsService';
 import { Article } from '../types';
 
@@ -112,7 +112,7 @@ const Sidebar: React.FC = () => {
           </div>
         ) : adConfig?.sidebarAd?.enabled && adConfig.sidebarAd.imageUrl ? (
           <a
-            href={adConfig.sidebarAd.linkUrl}
+            href={getAbsoluteUrl(adConfig.sidebarAd.linkUrl)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleAdClick}

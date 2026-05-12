@@ -5,7 +5,8 @@ import { Clock, ChevronRight, Loader2, AlertTriangle, RefreshCw, Zap, X, Play, V
 import Sidebar from '../components/Sidebar';
 import ArticleCard, { ArticleMedia } from '../components/ArticleCard';
 import { NewsService } from '../services/newsService';
-import { AdminService, GlobalAlert, AdConfig } from '../services/adminService';
+import { AdminService, GlobalAlert, AdConfig, getAbsoluteUrl } from '../services/adminService';
+import { AdUnit } from '../services/adminService';
 import { Article } from '../types';
 import SEO from '../components/SEO';
 import { toast } from 'sonner';
@@ -284,7 +285,7 @@ const Home: React.FC = () => {
       {adConfig?.homeBanner?.enabled && adConfig?.homeBanner?.imageUrl && (
         <div className="container mx-auto px-4 lg:px-8 py-10">
           <a
-            href={adConfig.homeBanner.linkUrl}
+            href={getAbsoluteUrl(adConfig.homeBanner.linkUrl)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleBannerClick}

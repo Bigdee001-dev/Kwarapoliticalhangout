@@ -29,6 +29,7 @@ export interface AdUnit {
 export interface AdConfig {
   homeBanner: AdUnit;
   sidebarAd: AdUnit;
+  popupAd?: AdUnit;
 }
 
 export interface User {
@@ -57,7 +58,13 @@ const DEFAULT_AD_UNIT: AdUnit = {
 
 const DEFAULT_AD_CONFIG: AdConfig = {
   homeBanner: { ...DEFAULT_AD_UNIT },
-  sidebarAd: { ...DEFAULT_AD_UNIT }
+  sidebarAd: { ...DEFAULT_AD_UNIT },
+  popupAd: { ...DEFAULT_AD_UNIT }
+};
+
+export const getAbsoluteUrl = (url: string | undefined) => {
+  if (!url || url === '#') return url || '#';
+  return /^https?:\/\//i.test(url) ? url : 'https://' + url;
 };
 
 export const AdminService = {
@@ -84,7 +91,7 @@ export const AdminService = {
     }
   },
 
-  async recordAdImpression(slot: 'homeBanner' | 'sidebarAd') {
+  async recordAdImpression(slot: 'homeBanner' | 'sidebarAd' | 'popupAd') {
     // Note: Incrementing in Supabase requires an RPC or read+write.
     // For simplicity, we just fetch, update, and save.
     const config = await this.getAdConfig();
@@ -93,7 +100,7 @@ export const AdminService = {
     await this.saveAdConfig(config);
   },
 
-  async recordAdClick(slot: 'homeBanner' | 'sidebarAd') {
+  async recordAdClick(slot: 'homeBanner' | 'sidebarAd' | 'popupAd') {
     const config = await this.getAdConfig();
     config[slot].stats.clicks += 1;
     config[slot].stats.lastUpdated = new Date().toISOString();

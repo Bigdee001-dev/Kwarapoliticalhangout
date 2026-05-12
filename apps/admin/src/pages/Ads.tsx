@@ -25,7 +25,7 @@ interface AdUnit {
   title?: string;
   stats: { clicks: number; impressions: number; lastUpdated: string };
 }
-interface AdConfig { homeBanner: AdUnit; sidebarAd: AdUnit; }
+interface AdConfig { homeBanner: AdUnit; sidebarAd: AdUnit; popupAd: AdUnit; }
 
 const DEFAULT_UNIT: AdUnit = {
   enabled: false, imageUrl: '', linkUrl: '#',
@@ -34,7 +34,8 @@ const DEFAULT_UNIT: AdUnit = {
 };
 const DEFAULT_CONFIG: AdConfig = {
   homeBanner: { ...DEFAULT_UNIT },
-  sidebarAd: { ...DEFAULT_UNIT }
+  sidebarAd: { ...DEFAULT_UNIT },
+  popupAd: { ...DEFAULT_UNIT }
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ async function fetchAdConfig(): Promise<AdConfig> {
   return {
     homeBanner: { ...DEFAULT_UNIT, ...(cfg.homeBanner || {}) },
     sidebarAd:  { ...DEFAULT_UNIT, ...(cfg.sidebarAd  || {}) },
+    popupAd:    { ...DEFAULT_UNIT, ...(cfg.popupAd    || {}) },
   };
 }
 
@@ -224,7 +226,7 @@ const Ads: React.FC = () => {
     if (config && !localConfig) setLocalConfig(config);
   }, [config]);
 
-  const handleSave = async (slot: 'homeBanner' | 'sidebarAd') => {
+  const handleSave = async (slot: 'homeBanner' | 'sidebarAd' | 'popupAd') => {
     if (!localConfig) return;
     setSaving(slot);
     try {
@@ -238,7 +240,7 @@ const Ads: React.FC = () => {
     }
   };
 
-  const handleResetStats = async (slot: 'homeBanner' | 'sidebarAd') => {
+  const handleResetStats = async (slot: 'homeBanner' | 'sidebarAd' | 'popupAd') => {
     if (!localConfig) return;
     const updated: AdConfig = {
       ...localConfig,
@@ -256,10 +258,10 @@ const Ads: React.FC = () => {
     }
   };
 
-  const totalImpressions = (effectiveConfig.homeBanner.stats.impressions || 0) + (effectiveConfig.sidebarAd.stats.impressions || 0);
-  const totalClicks = (effectiveConfig.homeBanner.stats.clicks || 0) + (effectiveConfig.sidebarAd.stats.clicks || 0);
+  const totalImpressions = (effectiveConfig.homeBanner.stats.impressions || 0) + (effectiveConfig.sidebarAd.stats.impressions || 0) + (effectiveConfig.popupAd?.stats?.impressions || 0);
+  const totalClicks = (effectiveConfig.homeBanner.stats.clicks || 0) + (effectiveConfig.sidebarAd.stats.clicks || 0) + (effectiveConfig.popupAd?.stats?.clicks || 0);
   const overallCtr = totalImpressions ? ((totalClicks / totalImpressions) * 100).toFixed(1) + '%' : '0%';
-  const activeSlots = [effectiveConfig.homeBanner, effectiveConfig.sidebarAd].filter(u => u.enabled).length;
+  const activeSlots = [effectiveConfig.homeBanner, effectiveConfig.sidebarAd, effectiveConfig.popupAd].filter(u => u?.enabled).length;
 
   if (isLoading) {
     return (
@@ -285,7 +287,7 @@ const Ads: React.FC = () => {
       {/* Overview KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Active Slots', value: `${activeSlots} / 2`, icon: Zap, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Active Slots', value: `${activeSlots} / 3`, icon: Zap, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Total Impressions', value: totalImpressions.toLocaleString(), icon: Eye, color: 'text-sky-600', bg: 'bg-sky-50' },
           { label: 'Total Clicks', value: totalClicks.toLocaleString(), icon: MousePointerClick, color: 'text-violet-600', bg: 'bg-violet-50' },
           { label: 'Overall CTR', value: overallCtr, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' },
@@ -327,6 +329,17 @@ const Ads: React.FC = () => {
               saving={saving === 'sidebarAd'}
               onSave={() => handleSave('sidebarAd')}
               onResetStats={() => handleResetStats('sidebarAd')}
+            />
+
+            <SlotEditor
+              label="Popup Advertisement"
+              icon={ImageIcon}
+              description="A pop-up modal ad that displays when a user visits the site"
+              unit={localConfig.popupAd}
+              onChange={(u) => setLocalConfig({ ...localConfig, popupAd: u })}
+              saving={saving === 'popupAd'}
+              onSave={() => handleSave('popupAd' as any)}
+              onResetStats={() => handleResetStats('popupAd' as any)}
             />
           </>
         )}
