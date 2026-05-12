@@ -28,7 +28,8 @@ import {
   CheckCircle, 
   XCircle, 
   Search,
-  Filter
+  Filter,
+  Video
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -191,7 +192,12 @@ const Articles: React.FC = () => {
             ) : filteredArticles?.map((article: any) => (
               <TableRow key={article.id} className="hover:bg-zinc-50/50 transition-colors">
                 <TableCell className="font-semibold text-kph-charcoal max-w-sm truncate pl-6">
-                  {article.title}
+                  <div className="flex items-center gap-2">
+                    {article.title}
+                    {(article.video_url || article.videoUrl) && (
+                      <Video size={14} className="text-kph-red shrink-0" />
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-zinc-500 text-sm">
                   {article.authorName || article.author_name || 'Anonymous'}

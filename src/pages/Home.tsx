@@ -1,13 +1,14 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, TrendingUp, ChevronRight, Loader2, AlertTriangle, RefreshCw, Zap, X } from 'lucide-react';
+import { Clock, ChevronRight, Loader2, AlertTriangle, RefreshCw, Zap, X, Play, Volume2, VolumeX, Video } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import ArticleCard from '../components/ArticleCard';
+import ArticleCard, { ArticleMedia } from '../components/ArticleCard';
 import { NewsService } from '../services/newsService';
 import { AdminService, GlobalAlert, AdConfig } from '../services/adminService';
 import { Article } from '../types';
 import SEO from '../components/SEO';
+import { toast } from 'sonner';
 
 interface GlobalAlertBannerProps {
   alert: GlobalAlert | null;
@@ -30,6 +31,133 @@ const GlobalAlertBanner = ({ alert, onClose }: GlobalAlertBannerProps) => {
     </div>
   );
 };
+
+// ─── Hero Section ────────────────────────────────────────────────────────────
+
+interface HeroSectionProps {
+  featuredArticle: Article | undefined;
+  subFeaturedArticles: Article[];
+}
+
+
+
+const HeroSection: React.FC<HeroSectionProps> = ({ featuredArticle, subFeaturedArticles }) => {
+  return (
+    <section className="hero-section relative overflow-hidden">
+      {/* Animated background accents */}
+      <div className="absolute inset-0 bg-kph-charcoal" />
+      <div className="hero-accent-1" />
+      <div className="hero-accent-2" />
+      <div className="hero-grain" />
+
+      <div className="container mx-auto px-4 lg:px-8 relative z-10 py-6 sm:py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 lg:gap-7" style={{ minHeight: '560px' }}>
+
+          {/* ── Featured / Video card ─────────────────────────────────────── */}
+          {featuredArticle && (
+            <div className="lg:col-span-3 relative group overflow-hidden rounded-2xl sm:rounded-3xl h-[420px] sm:h-[480px] lg:h-auto shadow-2xl border border-white/[0.06] bg-black hero-card">
+              {/* Cinematic Grain inside the card for more texture */}
+              <div className="hero-grain opacity-10" />
+
+              <ArticleMedia
+                article={featuredArticle}
+                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-[2s] ease-out"
+              />
+
+              {/* Multi-layer cinematic overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent pointer-events-none" />
+
+              {/* Top bar: badge + controls */}
+              <div className="absolute top-0 left-0 right-0 p-4 sm:p-5 flex items-start justify-between z-20">
+                {/* VIDEO badge */}
+                {!!featuredArticle.videoUrl && (
+                  <div className="flex items-center gap-2 bg-kph-red/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-red-400/20 shadow-lg">
+                    <Video size={12} className="shrink-0" />
+                    Video Report
+                  </div>
+                )}
+              </div>
+
+              {/* Text content */}
+              <div className="absolute bottom-0 left-0 p-5 sm:p-7 lg:p-10 w-full hero-text-glass">
+                <div className="flex flex-wrap items-center gap-2.5 mb-3 sm:mb-4">
+                  <span className="inline-block font-black text-[10px] lg:text-xs tracking-widest text-white bg-kph-red px-3 py-1.5 rounded-lg uppercase border border-red-400/20 shadow-lg">
+                    {featuredArticle.category}
+                  </span>
+                </div>
+
+                <Link to={`/article/${featuredArticle.id}`} className="block group/title">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[2.75rem] font-black text-white mb-4 sm:mb-5 leading-[1.15] font-serif drop-shadow-xl group-hover/title:text-white/90 transition-colors line-clamp-3 lg:line-clamp-none">
+                    {featuredArticle.title}
+                  </h2>
+                </Link>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4 text-gray-300 text-[11px] sm:text-xs font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={13} />
+                      {featuredArticle.readTime}
+                    </span>
+                    <span className="text-white/20">•</span>
+                    <span className="text-white/60">{featuredArticle.author}</span>
+                  </div>
+
+                  {/* CTA buttons */}
+                  <div className="flex items-center gap-2.5">
+                    <Link
+                      to={`/article/${featuredArticle.id}`}
+                      className="hero-cta-secondary"
+                    >
+                      Read Story
+                      <ChevronRight size={13} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        {/* ── Sub-featured articles panel ───────────────────────────────── */}
+        <div className="lg:col-span-2 grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-5 h-full">
+          {subFeaturedArticles.map((article, idx) => (
+            <div
+              key={article.id}
+              className="relative group overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl h-44 sm:h-52 lg:h-auto shadow-xl border border-white/[0.06] bg-gray-900 flex-1 hero-sub-card"
+              style={{ animationDelay: `${idx * 120}ms` }}
+            >
+              <Link to={`/article/${article.id}`} className="block w-full h-full">
+                <ArticleMedia
+                  article={article}
+                  className="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-kph-red/0 group-hover:bg-kph-red/5 transition-colors duration-500" />
+                <div className="absolute bottom-0 left-0 p-3.5 sm:p-5 lg:p-6 w-full">
+                  <span className="text-[9px] font-black text-kph-red uppercase tracking-widest mb-1.5 sm:mb-2 block">
+                    {article.category}
+                  </span>
+                  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg leading-snug font-serif line-clamp-2 lg:line-clamp-3">
+                    {article.title}
+                  </h3>
+                  <div className="hidden sm:flex items-center gap-1.5 mt-2.5 text-white/40 text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ChevronRight size={11} />
+                    Read More
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </div>
+    </section >
+  );
+};
+
+// ─── Home Page ────────────────────────────────────────────────────────────────
 
 const Home: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -127,6 +255,7 @@ const Home: React.FC = () => {
   const featuredArticle = articles[0];
   const subFeaturedArticles = articles.slice(1, 3);
   const feedArticles = articles.slice(3, 10);
+  const latestVideoArticle = articles.find(a => a.videoUrl && a.id !== featuredArticle?.id);
 
   return (
     <div className="bg-kph-light min-h-screen pb-12 animate-fade-in flex flex-col">
@@ -150,44 +279,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <section className="bg-kph-charcoal py-8 lg:py-14 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-kph-red/5 skew-x-12 translate-x-20"></div>
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:h-[580px]">
-            {featuredArticle && (
-              <div className="lg:col-span-3 relative group overflow-hidden rounded-3xl h-[400px] lg:h-auto shadow-2xl border border-white/5">
-                <Link to={`/article/${featuredArticle.id}`} className="block w-full h-full">
-                  <img src={featuredArticle.imageUrl} alt={featuredArticle.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.8s] ease-out" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-8 lg:p-12 w-full">
-                    <span className="inline-block font-black text-[10px] lg:text-xs tracking-widest text-white bg-kph-red px-3 py-1.5 rounded-lg mb-4 uppercase border border-red-400/30 shadow-lg">{featuredArticle.category}</span>
-                    <h2 className="text-3xl lg:text-5xl font-black text-white mb-4 leading-tight font-serif drop-shadow-xl">{featuredArticle.title}</h2>
-                    <div className="flex items-center gap-4 text-gray-300 text-xs font-bold">
-                      <span className="flex items-center gap-1.5"><Clock size={14} /> {featuredArticle.readTime}</span>
-                      <span>•</span>
-                      <span>{featuredArticle.author}</span>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            )}
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 h-full">
-              {subFeaturedArticles.map((article) => (
-                <div key={article.id} className="relative group overflow-hidden rounded-3xl h-56 lg:h-auto shadow-xl border border-white/5 bg-gray-900">
-                  <Link to={`/article/${article.id}`} className="block w-full h-full">
-                    <img src={article.imageUrl} alt={article.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/10 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 p-6 w-full">
-                      <span className="text-[10px] font-black text-kph-red uppercase tracking-widest mb-2 block">{article.category}</span>
-                      <h3 className="text-white font-bold text-lg lg:text-xl leading-snug font-serif">{article.title}</h3>
-                    </div>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection featuredArticle={featuredArticle} subFeaturedArticles={subFeaturedArticles} />
 
       {adConfig?.homeBanner?.enabled && adConfig?.homeBanner?.imageUrl && (
         <div className="container mx-auto px-4 lg:px-8 py-10">
@@ -217,15 +309,17 @@ const Home: React.FC = () => {
               </div>
               <div className="space-y-6">
                 {feedArticles.map((article, idx) => (
-                  <ArticleCard 
-                    key={`feed-${article.id}`} 
-                    article={article} 
-                    variant="list" 
-                    delay={idx * 100} 
+                  <ArticleCard
+                    key={`feed-${article.id}`}
+                    article={article}
+                    variant="list"
+                    delay={idx * 100}
                   />
                 ))}
               </div>
             </section>
+
+
           </div>
           <div className="lg:col-span-4 space-y-10">
             <Sidebar />

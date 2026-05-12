@@ -1,6 +1,18 @@
 import { supabase } from './supabase';
 import { Article } from '../types';
 
+export interface WriterArticle {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  imageUrl: string;
+  videoUrl?: string;
+  excerpt?: string;
+  status: 'Published' | 'Draft' | 'Review';
+  date: string;
+}
+
 export interface AdUnit {
   enabled: boolean;
   imageUrl: string;

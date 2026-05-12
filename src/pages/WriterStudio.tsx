@@ -6,12 +6,14 @@ import {
   ArrowLeft, Cloud, Trash2, Bold, Italic, Underline, 
   Heading1, Heading2, Quote, Link, Image as ImageIcon, 
   List, ListOrdered, Brain, Sparkles, Wand2, SpellCheck, 
-  Send as SendIcon, Save, Upload, X, Check, Info, Loader2
+  Send as SendIcon, Save, Upload, X, Check, Info, Loader2,
+  Video, Play, FileVideo
 } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { AdminService } from '../services/adminService';
 import { toast } from 'sonner';
 import { ImageUploadService } from '../services/imageUploadService';
+import { VideoUploadService } from '../services/videoUploadService';
 
 const WriterStudio: React.FC = () => {
     const navigate = useNavigate();
@@ -30,6 +32,12 @@ const WriterStudio: React.FC = () => {
     const [aiProcessing, setAiProcessing] = useState<string | null>(null);
     const [userProfile, setUserProfile] = useState<any>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [featuredVideo, setFeaturedVideo] = useState<string | null>(null);
+    const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+    const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+    const [videoFileName, setVideoFileName] = useState<string | null>(null);
+    const [uploadStats, setUploadStats] = useState<{ speed: string; eta: string } | null>(null);
+    const uploadStartTime = useRef<number>(0);
 
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -117,6 +125,7 @@ const WriterStudio: React.FC = () => {
                 subCategory,
                 tags,
                 imageUrl: featuredImage,
+                videoUrl: featuredVideo || undefined,
                 status,
                 wordCount,
                 readTime: readingTime
@@ -173,6 +182,64 @@ const WriterStudio: React.FC = () => {
                 } finally {
                     setIsUploadingImage(false);
                 }
+            }
+        };
+        input.click();
+    };
+
+    const handleVideoUpload = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo';
+        input.onchange = async (e: any) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                VideoUploadService.validateVideo(file);
+            } catch (err: any) {
+                toast.error(err.message);
+                return;
+            }
+
+            setIsUploadingVideo(true);
+            setVideoUploadProgress(0);
+            setVideoFileName(file.name);
+            setUploadStats(null);
+            uploadStartTime.current = Date.now();
+            const loadingToast = toast.loading('Initiating secure video upload...');
+
+            try {
+                const url = await VideoUploadService.uploadVideo(file, '/kph-videos', (pct, loaded, total) => {
+                    setVideoUploadProgress(pct);
+                    
+                    // Calculate speed and ETA
+                    const now = Date.now();
+                    const duration = (now - uploadStartTime.current) / 1000;
+                    if (duration > 0.5) {
+                        const bps = loaded / duration;
+                        const kbps = bps / 1024;
+                        const mbps = kbps / 1024;
+                        
+                        const speed = mbps > 1 ? `${mbps.toFixed(1)} MB/s` : `${kbps.toFixed(0)} KB/s`;
+                        
+                        const remainingBytes = total - loaded;
+                        const remainingSeconds = remainingBytes / bps;
+                        const eta = remainingSeconds > 60 
+                            ? `${Math.floor(remainingSeconds / 60)}m ${Math.floor(remainingSeconds % 60)}s`
+                            : `${Math.floor(remainingSeconds)}s`;
+                            
+                        setUploadStats({ speed, eta });
+                    }
+                });
+                setFeaturedVideo(url);
+                toast.success('Video uploaded successfully!', { id: loadingToast });
+            } catch (error: any) {
+                toast.error(`Video upload failed: ${error.message}`, { id: loadingToast });
+                setVideoFileName(null);
+            } finally {
+                setIsUploadingVideo(false);
+                setUploadStats(null);
             }
         };
         input.click();
@@ -364,6 +431,110 @@ const WriterStudio: React.FC = () => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Visual Strategy */}
+                        <div className="bg-white border border-studio-outline-variant p-6 shadow-sm">
+                            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-studio-outline mb-4 flex items-center gap-2">
+                                <Sparkles size={14} className="text-studio-secondary" /> Editorial Strategy
+                            </h2>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!tags.includes('VisualExclusive')) setTags([...tags, 'VisualExclusive']);
+                                    }}
+                                    className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                                        tags.includes('VisualExclusive') 
+                                        ? 'bg-studio-primary text-white border-studio-primary shadow-md' 
+                                        : 'bg-studio-background text-studio-outline border-studio-outline-variant hover:border-studio-primary'
+                                    }`}
+                                >
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Visual Exclusive</p>
+                                        <p className="text-[8px] opacity-60 font-bold uppercase">Optimized for video playback</p>
+                                    </div>
+                                    <Video size={16} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Featured Video Asset */}
+                        <div className="bg-white border border-studio-outline-variant p-6 shadow-sm">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-studio-outline flex items-center gap-2">
+                                    <FileVideo size={14} /> Video Intelligence
+                                </h2>
+                                {featuredVideo && (
+                                    <span className="flex items-center gap-1 text-[8px] font-black text-studio-secondary uppercase tracking-widest">
+                                        <Check size={10} /> Asset Ready
+                                    </span>
+                                )}
+                            </div>
+
+                            {featuredVideo ? (
+                                <div className="space-y-4">
+                                    <div className="relative aspect-video bg-zinc-950 rounded-xl overflow-hidden shadow-2xl group/vid">
+                                        <video
+                                            src={featuredVideo}
+                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                            controls
+                                        />
+                                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 to-transparent"></div>
+                                    </div>
+                                    <div className="bg-studio-background p-3 rounded-lg border border-studio-outline-variant">
+                                        <p className="text-[9px] text-studio-primary font-bold uppercase tracking-tight truncate mb-1">
+                                            {videoFileName || 'Cinematic Asset Loaded'}
+                                        </p>
+                                        <p className="text-[8px] text-studio-outline font-medium uppercase tracking-widest flex items-center gap-2">
+                                            <ShieldAlert size={10} /> Verified MP4 Stream
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setFeaturedVideo(null); setVideoFileName(null); }}
+                                        className="w-full flex items-center justify-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all border border-red-100"
+                                    >
+                                        <Trash2 size={12} /> Purge Video Asset
+                                    </button>
+                                </div>
+                            ) : (
+                                <div
+                                    onClick={!isUploadingVideo ? handleVideoUpload : undefined}
+                                    className={`relative aspect-video bg-studio-background border-2 border-dashed border-studio-outline-variant flex flex-col items-center justify-center cursor-pointer hover:bg-studio-outline-variant/10 transition-all group overflow-hidden rounded-xl ${
+                                        isUploadingVideo ? 'cursor-not-allowed opacity-80' : ''
+                                    }`}
+                                >
+                                    {isUploadingVideo ? (
+                                        <div className="flex flex-col items-center gap-4 w-full px-8">
+                                            <div className="w-12 h-12 rounded-full bg-studio-primary/10 flex items-center justify-center shadow-inner">
+                                                <Loader2 size={24} className="animate-spin text-studio-primary" />
+                                            </div>
+                                            <div className="w-full space-y-2">
+                                                <div className="w-full bg-studio-outline-variant/30 rounded-full h-1.5 overflow-hidden">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${videoUploadProgress}%` }}
+                                                        className="h-full bg-studio-primary shadow-[0_0_8px_rgba(47,79,79,0.3)]"
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between w-full text-[9px] font-black uppercase tracking-widest text-studio-primary">
+                                                    <span>{videoUploadProgress}%</span>
+                                                    {uploadStats && <span>{uploadStats.speed} · {uploadStats.eta}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center text-studio-outline group-hover:text-studio-primary transition-all duration-300">
+                                            <div className="w-14 h-14 rounded-full bg-studio-background border border-studio-outline-variant flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-lg transition-all">
+                                                <Video size={24} />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-center">Deploy Video Asset</span>
+                                            <span className="text-[8px] text-studio-outline/50 mt-2 text-center font-bold uppercase tracking-widest">MP4 / WEBM / MOV • MAX 100MB</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* AI Engine */}

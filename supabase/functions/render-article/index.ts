@@ -12,7 +12,7 @@ const SITE_URL = "https://www.kwarapoliticalhangout.com.ng"
  * Builds a complete, self-contained HTML page with article-specific
  * Open Graph / Twitter meta tags injected.
  */
-function buildMetaHtml(title: string, description: string, image: string, canonical: string): string {
+function buildMetaHtml(title: string, description: string, image: string, canonical: string, videoUrl: string = ""): string {
   // Escape content to prevent XSS in meta attributes
   const esc = (s: string) => s.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
@@ -29,6 +29,17 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
   <meta property="og:image:alt" content="${t}">
   <meta name="twitter:image" content="${img}">
   <meta name="twitter:image:alt" content="${t}">` : ''
+
+  const videoTags = videoUrl ? `
+  <meta property="og:video" content="${esc(videoUrl)}">
+  <meta property="og:video:secure_url" content="${esc(videoUrl)}">
+  <meta property="og:video:type" content="video/mp4">
+  <meta property="og:video:width" content="1280">
+  <meta property="og:video:height" content="720">
+  <meta name="twitter:card" content="player">
+  <meta name="twitter:player" content="${esc(videoUrl)}">
+  <meta name="twitter:player:width" content="1280">
+  <meta name="twitter:player:height" content="720">` : '<meta name="twitter:card" content="summary_large_image">'
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -50,10 +61,9 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
   <meta property="og:site_name" content="KPH News">
   <meta property="og:url" content="${url}">
   <meta property="og:title" content="${t}">
-  <meta property="og:description" content="${d}">${imageTags}
+  <meta property="og:description" content="${d}">${imageTags}${videoTags}
 
   <!-- Twitter / X -->
-  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@KPHNews">
   <meta name="twitter:url" content="${url}">
   <meta name="twitter:title" content="${t}">
@@ -112,7 +122,7 @@ serve(async (req: Request) => {
     console.log(`[DB] Fetching article ${articleId}...`)
     const { data: article, error } = await supabase
       .from('articles')
-      .select('id, title, excerpt, content, image_url, imageUrl, category, date')
+      .select('id, title, excerpt, content, image_url, imageUrl, video_url, category, date')
       .eq('id', articleId)
       .single()
 
@@ -154,8 +164,9 @@ serve(async (req: Request) => {
       || (article.content ? article.content.replace(/<[^>]*>/g, '').substring(0, 160) : "")
       || `Read the latest ${article.category || 'political'} news from Kwara State.`
     const canonical = `${SITE_URL}/article/${articleId}`
+    const videoUrl = article.video_url || ""
 
-    const html = buildMetaHtml(title, description, image, canonical)
+    const html = buildMetaHtml(title, description, image, canonical, videoUrl)
 
     return new Response(html, {
       headers: {

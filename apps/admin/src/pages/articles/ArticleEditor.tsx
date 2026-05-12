@@ -23,12 +23,14 @@ import {
   X, 
   ChevronLeft, 
   Loader2, 
-  Settings2
+  Settings2,
+  Video
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
 import { ImageUploadService } from '@/services/imageUploadService';
+import { VideoUploadService } from '@/services/videoUploadService';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -43,7 +45,9 @@ const ArticleEditor: React.FC = () => {
   const [category, setCategory] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
+  const [featuredVideo, setFeaturedVideo] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isEdit = !!id;
@@ -94,6 +98,11 @@ const ArticleEditor: React.FC = () => {
       const toastId = toast.loading('Uploading image asset...');
       try {
         const url = await uploadToImageKit(file, folder);
+        
+        if (!quillRef.current) {
+          throw new Error('Editor not found. Please try again.');
+        }
+
         const quill = quillRef.current.getEditor();
         const range = quill.getSelection(true);
         quill.insertEmbed(range.index, 'image', url);
@@ -120,7 +129,15 @@ const ArticleEditor: React.FC = () => {
       const folder = id || 'temp';
       const toastId = toast.loading('Uploading video asset...');
       try {
-        const url = await uploadToImageKit(file, folder);
+        // Use VideoUploadService for better validation and progress tracking
+        const url = await VideoUploadService.uploadVideo(file, `/kph-articles/${folder}`, (pct) => {
+          toast.loading(`Uploading video: ${pct}%`, { id: toastId });
+        });
+
+        if (!quillRef.current) {
+          throw new Error('Editor not found. Please try again.');
+        }
+
         const quill = quillRef.current.getEditor();
         const range = quill.getSelection(true);
         quill.insertEmbed(range.index, 'video', url);
@@ -164,6 +181,7 @@ const ArticleEditor: React.FC = () => {
       setCategory(article.category || '');
       setExcerpt(article.excerpt || '');
       setFeaturedImage(article.image_url || article.imageUrl || article.featuredImage || null);
+      setFeaturedVideo(article.video_url || null);
       hasInitialized.current = true;
     }
   }, [article]);
@@ -184,6 +202,27 @@ const ArticleEditor: React.FC = () => {
       toast.error(`Image upload failed: ${error.message || 'Unknown error'}`, { id: toastId });
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleFeaturedVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingVideo(true);
+    const toastId = toast.loading('Uploading featured video report...');
+    try {
+      const folder = id || 'temp';
+      const url = await VideoUploadService.uploadVideo(file, `/kph-articles/${folder}`, (pct) => {
+        toast.loading(`Uploading video: ${pct}%`, { id: toastId });
+      });
+      setFeaturedVideo(url);
+      toast.success('Video uploaded successfully', { id: toastId });
+    } catch (error: any) {
+      console.error('Featured video upload failed:', error);
+      toast.error(`Video upload failed: ${error.message || 'Unknown error'}`, { id: toastId });
+    } finally {
+      setUploadingVideo(false);
     }
   };
 
@@ -219,6 +258,7 @@ const ArticleEditor: React.FC = () => {
         authorName: user?.user_metadata?.full_name || user?.user_metadata?.displayName || 'Anonymous',
         authorAvatar: user?.user_metadata?.avatar_url || user?.user_metadata?.photo_url || '',
         imageUrl: featuredImage || '',
+        video_url: featuredVideo || '',
       };
 
       if (status === 'published') {
@@ -294,48 +334,51 @@ const ArticleEditor: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main Content Area */}
-        <div className="lg:col-span-3 space-y-6">
-          <Card className="border-none shadow-sm ring-1 ring-neutral-200">
-            <CardContent className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Input 
-                  placeholder="The Narrative Title..." 
-                  className="border-none text-4xl font-serif font-black placeholder:text-neutral-200 focus-visible:ring-0 px-0 h-auto"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-                <div className="h-px bg-neutral-100" />
-              </div>
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-3xl shadow-sm border border-neutral-100 min-h-[800px] relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-kph-red to-red-400"></div>
+             
+             {/* Sticky Toolbar Container (Quill Toolbar will be moved here by CSS) */}
+             <div className="quill-toolbar-container sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-neutral-100 py-3 px-8 shadow-sm"></div>
 
-              <div className="quill-wrapper">
-                <ReactQuill 
-                  ref={quillRef}
-                  theme="snow" 
-                  value={content} 
-                  onChange={setContent}
-                  placeholder="Unfold the story here..."
-                  modules={modules}
-                  className="min-h-[500px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
+             <div className="px-8 py-12 lg:px-16 lg:py-12">
+               <div className="space-y-4 mb-8 max-w-[800px] mx-auto">
+                 <Input 
+                   placeholder="The Narrative Title..." 
+                   className="border-none text-4xl lg:text-5xl font-serif font-black placeholder:text-neutral-200 focus-visible:ring-0 px-0 h-auto bg-transparent leading-tight text-kph-charcoal"
+                   value={title}
+                   onChange={(e) => setTitle(e.target.value)}
+                 />
+               </div>
+
+               <div className="quill-wrapper max-w-[800px] mx-auto">
+                 <ReactQuill 
+                   ref={quillRef}
+                   theme="snow" 
+                   value={content} 
+                   onChange={setContent}
+                   placeholder="Unfold the story here..."
+                   modules={modules}
+                 />
+               </div>
+             </div>
+          </div>
         </div>
 
         {/* Sidebar Settings Area */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="border-none shadow-sm ring-1 ring-neutral-200">
-            <CardHeader className="pb-4">
-              <CardTitle className="font-serif text-lg flex items-center gap-2">
-                <Settings2 className="h-4 w-4 text-kph-red" /> Metadata
+          <Card className="border-none shadow-sm ring-1 ring-neutral-200 sticky top-6">
+            <CardHeader className="pb-4 border-b border-neutral-100">
+              <CardTitle className="font-serif text-lg flex items-center gap-2 text-kph-charcoal">
+                <Settings2 className="h-4 w-4 text-kph-red" /> Document Settings
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 pt-6">
               {/* Category */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Category</Label>
                 <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="w-full h-10">
+                  <SelectTrigger className="w-full h-10 border-neutral-200 focus:ring-kph-red">
                     <SelectValue placeholder="Focus Area" />
                   </SelectTrigger>
                   <SelectContent>
@@ -353,37 +396,39 @@ const ArticleEditor: React.FC = () => {
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Featured Graphic</Label>
                 
                 {featuredImage ? (
-                  <div className="relative aspect-video rounded-lg overflow-hidden border group">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-200 group shadow-sm">
                     <img src={featuredImage} alt="Featured" className="w-full h-full object-cover" />
                     <button 
                       onClick={() => setFeaturedImage(null)}
-                      className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <label className="flex flex-col items-center justify-center aspect-video rounded-lg border border-dashed border-neutral-300 hover:border-kph-red hover:bg-neutral-50 cursor-pointer transition-all">
+                    <label className="flex flex-col items-center justify-center aspect-video rounded-xl border-2 border-dashed border-neutral-200 hover:border-kph-red hover:bg-red-50 cursor-pointer transition-all group">
                       {uploadingImage ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <Loader2 className="h-6 w-6 animate-spin text-kph-red" />
                       ) : (
                         <>
-                          <ImageIcon className="h-6 w-6 text-muted-foreground mb-2" />
-                          <span className="text-[10px] font-bold text-muted-foreground">Upload Asset</span>
+                          <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm mb-2 group-hover:scale-110 transition-transform">
+                             <ImageIcon className="h-5 w-5 text-kph-red" />
+                          </div>
+                          <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wide">Upload Image Asset</span>
                         </>
                       )}
                       <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} />
                     </label>
                     <div className="flex items-center gap-2">
                       <div className="h-px bg-neutral-100 flex-1" />
-                      <span className="text-[10px] font-black text-neutral-300 uppercase">OR</span>
+                      <span className="text-[9px] font-black text-neutral-300 uppercase tracking-widest">OR PASTE URL</span>
                       <div className="h-px bg-neutral-100 flex-1" />
                     </div>
                     <div className="space-y-1.5">
                       <Input 
-                        placeholder="Paste image URL here..." 
-                        className="h-8 text-[10px] font-bold"
+                        placeholder="https://..." 
+                        className="h-9 text-xs font-medium border-neutral-200 focus-visible:ring-kph-red bg-neutral-50 focus:bg-white transition-colors"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             const val = (e.target as HTMLInputElement).value;
@@ -403,15 +448,50 @@ const ArticleEditor: React.FC = () => {
                   </div>
                 )}
               </div>
+              {/* Featured Video */}
+              <div className="space-y-4 pt-4 border-t border-neutral-100">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Featured Video Report</Label>
+                
+                {featuredVideo ? (
+                  <div className="space-y-3">
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-black group shadow-sm">
+                      <video src={featuredVideo} className="w-full h-full object-contain" controls />
+                      <button 
+                        onClick={() => setFeaturedVideo(null)}
+                        className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 z-10 hover:scale-110"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center aspect-video rounded-xl border-2 border-dashed border-neutral-200 hover:border-kph-red hover:bg-red-50 cursor-pointer transition-all group">
+                    {uploadingVideo ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-6 w-6 animate-spin text-kph-red" />
+                        <span className="text-[8px] font-black text-kph-red uppercase tracking-wide">Uploading...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm mb-2 group-hover:scale-110 transition-transform">
+                            <Video className="h-5 w-5 text-kph-red" />
+                        </div>
+                        <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wide">Upload Video Asset</span>
+                      </>
+                    )}
+                    <input type="file" className="hidden" accept="video/*" onChange={handleFeaturedVideoUpload} disabled={uploadingVideo} />
+                  </label>
+                )}
+              </div>
 
-              {/* Excerpt */}
-              <div className="space-y-2">
+              {/* Hook / Excerpt */}
+              <div className="space-y-2 pt-4 border-t border-neutral-100">
                 <div className="flex items-center justify-between">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Hook / Excerpt</Label>
-                  <span className="text-[9px] text-muted-foreground">{excerpt.length}/300</span>
+                  <span className="text-[9px] font-bold text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">{excerpt.length}/300</span>
                 </div>
                 <textarea 
-                  className="w-full min-h-[100px] bg-zinc-50 border rounded-lg p-3 text-xs font-medium focus:ring-1 focus:ring-kph-red outline-none"
+                  className="w-full min-h-[100px] bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-kph-red/20 focus:border-kph-red outline-none transition-all resize-none"
                   placeholder="Sum up the essence in a few lines..."
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value.substring(0, 300))}
@@ -419,14 +499,14 @@ const ArticleEditor: React.FC = () => {
               </div>
 
               {/* Stats Preview */}
-              <div className="pt-4 border-t space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-bold">
-                  <span className="text-muted-foreground">Est. Read Time</span>
-                  <span className="text-kph-charcoal">{calculateReadTime(content)}</span>
+              <div className="pt-4 border-t border-neutral-100 space-y-3">
+                <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Est. Read Time</span>
+                  <span className="text-xs font-bold text-kph-red">{calculateReadTime(content)}</span>
                 </div>
-                <div className="flex items-center justify-between text-[10px] font-bold">
-                  <span className="text-muted-foreground">Word Count</span>
-                  <span className="text-kph-charcoal">{(content || '').split(/\s+/).length} words</span>
+                <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Word Count</span>
+                  <span className="text-xs font-bold text-kph-red">{(content || '').split(/\s+/).length} words</span>
                 </div>
               </div>
             </CardContent>
@@ -435,41 +515,117 @@ const ArticleEditor: React.FC = () => {
       </div>
 
       <style>{`
-        .quill-wrapper .ql-container {
-          border-bottom-left-radius: 0.5rem;
-          border-bottom-right-radius: 0.5rem;
-          background: #fafafa;
-          font-family: var(--font-sans);
-          font-size: 1.15rem;
+        /* Minimalist Canvas Styling for Quill */
+        .quill-wrapper .ql-container.ql-snow {
+          border: none !important;
+          font-family: var(--font-serif), Georgia, serif;
+          font-size: 1.25rem;
           line-height: 1.8;
+          color: #2b2b2b;
         }
         .quill-wrapper .ql-editor {
-          min-height: 500px;
-          padding: 2rem;
+          min-height: 600px;
+          padding: 1rem 0 6rem 0;
         }
+        .quill-wrapper .ql-editor.ql-blank::before {
+          left: 0;
+          font-style: normal;
+          color: #a3a3a3;
+        }
+        
+        /* Double line spacing between paragraphs */
         .quill-wrapper .ql-editor p {
-          margin-bottom: 1.5rem;
+          margin-bottom: 2.5em; /* This gives the double line spacing effect */
         }
-        .quill-wrapper .ql-editor img {
+        
+        /* Typography Polish */
+        .quill-wrapper .ql-editor h1,
+        .quill-wrapper .ql-editor h2,
+        .quill-wrapper .ql-editor h3 {
+          font-family: var(--font-sans), system-ui, sans-serif;
+          font-weight: 800;
+          color: #111;
+          margin-top: 2.5em;
+          margin-bottom: 1em;
+          letter-spacing: -0.02em;
+        }
+        
+        .quill-wrapper .ql-editor h1 { font-size: 2.25rem; }
+        .quill-wrapper .ql-editor h2 { font-size: 1.875rem; }
+        .quill-wrapper .ql-editor h3 { font-size: 1.5rem; }
+        
+        /* Clean quotes */
+        .quill-wrapper .ql-editor blockquote {
+          border-left: 4px solid #ef4444; /* kph-red */
+          margin-left: 0;
+          padding-left: 1.5rem;
+          color: #525252;
+          font-style: italic;
+          font-size: 1.35rem;
+          margin-bottom: 2.5em;
+        }
+
+        /* Images and Media */
+        .quill-wrapper .ql-editor img,
+        .quill-wrapper .ql-editor iframe {
           border-radius: 0.75rem;
-          margin: 2rem 0;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          margin: 3em auto;
+          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+          max-width: 100%;
+          display: block;
         }
-        .quill-wrapper .ql-toolbar {
-          border-top-left-radius: 0.5rem;
-          border-top-right-radius: 0.5rem;
+
+        /* Toolbar Styling */
+        .quill-wrapper .ql-toolbar.ql-snow {
+          border: none !important;
+          background: transparent;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 0.25rem;
+        }
+        
+        /* Move toolbar into sticky container */
+        .quill-toolbar-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        
+        .quill-wrapper .ql-toolbar .ql-formats {
+          margin-right: 0.5rem;
           background: white;
-          border-color: #e5e5e5;
-          padding: 1rem;
-          position: sticky;
-          top: 0;
-          z-index: 10;
+          border: 1px solid #f0f0f0;
+          border-radius: 0.5rem;
+          padding: 0.15rem;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .quill-wrapper .ql-container.ql-snow {
-          border-color: #e5e5e5;
+        
+        .quill-wrapper .ql-toolbar button:hover,
+        .quill-wrapper .ql-toolbar .ql-picker-label:hover {
+          color: #ef4444 !important; /* kph-red */
         }
+        .quill-wrapper .ql-toolbar button.ql-active {
+          color: #ef4444 !important;
+        }
+        .quill-wrapper .ql-toolbar .ql-stroke {
+          stroke: #525252;
+        }
+        .quill-wrapper .ql-toolbar .ql-fill {
+          fill: #525252;
+        }
+        .quill-wrapper .ql-toolbar button:hover .ql-stroke,
+        .quill-wrapper .ql-toolbar button.ql-active .ql-stroke {
+          stroke: #ef4444 !important;
+        }
+        .quill-wrapper .ql-toolbar button:hover .ql-fill,
+        .quill-wrapper .ql-toolbar button.ql-active .ql-fill {
+          fill: #ef4444 !important;
+        }
+        
         .ql-snow .ql-picker.ql-header {
-          width: 120px;
+          width: 130px;
         }
       `}</style>
     </div>

@@ -115,21 +115,13 @@ const About: React.FC = () => {
 
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-               { name: 'Dr. Adebayo Kunle', role: 'Editor-in-Chief', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80' },
-               { name: 'Sarah Johnson', role: 'Senior Pol. Editor', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80' },
-               { name: 'Musa Ibrahim', role: 'Head of Investigations', img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80' },
-               { name: 'Chioma Okonkwo', role: 'Community Manager', img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80' }
+               { name: 'Dr. Adebayo Kunle', role: 'Editor-in-Chief' },
+               { name: 'Sarah Johnson', role: 'Senior Pol. Editor' },
+               { name: 'Musa Ibrahim', role: 'Head of Investigations' },
+               { name: 'Chioma Okonkwo', role: 'Community Manager' }
             ].map((member, i) => (
-               <div key={i} className="group">
-                  <div className="relative overflow-hidden rounded-2xl mb-4 aspect-[4/5]">
-                     <img src={member.img} alt={member.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 grayscale group-hover:grayscale-0" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                        <div className="text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                           <p className="font-bold">Connect</p>
-                        </div>
-                     </div>
-                  </div>
-                  <h3 className="text-xl font-bold text-kph-charcoal">{member.name}</h3>
+               <div key={i} className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center">
+                  <h3 className="text-xl font-bold text-kph-charcoal mb-2">{member.name}</h3>
                   <p className="text-kph-red font-medium text-sm">{member.role}</p>
                </div>
             ))}

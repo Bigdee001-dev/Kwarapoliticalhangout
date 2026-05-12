@@ -187,12 +187,19 @@ const Contact: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Map Placeholder */}
-                <div className="bg-gray-200 h-64 rounded-2xl flex items-center justify-center text-gray-400 font-bold border-4 border-white shadow-lg relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/map/800/400')] bg-cover bg-center opacity-50 grayscale group-hover:grayscale-0 transition-all duration-700"></div>
-                    <div className="relative z-10 bg-white/80 backdrop-blur-sm px-6 py-2 rounded-full shadow-sm">
-                        View on Google Maps
-                    </div>
+                {/* Real Map */}
+                <div className="bg-gray-200 h-64 rounded-2xl border-4 border-white shadow-lg relative overflow-hidden">
+                    <iframe 
+                      title="KPH Office Location"
+                      width="100%" 
+                      height="100%" 
+                      frameBorder="0" 
+                      scrolling="no" 
+                      marginHeight={0} 
+                      marginWidth={0} 
+                      src="https://maps.google.com/maps?q=123%20Unity%20Road,%20GRA,%20Ilorin,%20Kwara%20State,%20Nigeria&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                      className="absolute inset-0 w-full h-full grayscale hover:grayscale-0 transition-all duration-700"
+                    ></iframe>
                 </div>
              </div>
           </div>
