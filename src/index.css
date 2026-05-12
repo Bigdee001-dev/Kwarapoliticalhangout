@@ -537,13 +537,6 @@
   @apply backdrop-blur-[2px];
 }
 
-p: 6px;
-font-size: 10px;
-font-weight: 800;
-color: rgba(255, 255, 255, 0.6);
-text-transform: uppercase;
-letter-spacing: 0.12em;
-}
 
 .hero-live-dot {
   width: 6px;
