@@ -69,8 +69,59 @@ export const NewsService = {
     }
   },
 
+  async fetchLiveSportsNews(): Promise<Article[]> {
+    const cacheKey = `latest_sports_api`;
+    const cached = newsCache[cacheKey];
+    if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+      return cached.data;
+    }
+
+    try {
+      const response = await fetch('https://newsdata.io/api/1/latest?apikey=pub_510e28e84bbb4e2f81191a52b9395b0a&category=sports&language=en');
+      const data = await response.json();
+      
+      if (data.status !== 'success') {
+        throw new Error('Failed to fetch sports news');
+      }
+
+      const articles: Article[] = data.results.map((d: any) => {
+        const art: Article = {
+          id: d.article_id,
+          title: d.title,
+          excerpt: d.description || '',
+          content: d.content || d.description || '',
+          category: 'Sports',
+          author: d.creator ? d.creator[0] : (d.source_name || 'KPH Sports'),
+          date: d.pubDate,
+          readTime: '4 min read',
+          imageUrl: d.image_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1000&auto=format&fit=crop',
+          videoUrl: d.video_url || '',
+          sourceUrl: d.link,
+          sourceName: d.source_name || 'KPH Sports',
+          isFeatured: false,
+          status: 'published',
+          views: Math.floor(Math.random() * 500) + 100,
+          likes: Math.floor(Math.random() * 200) + 10
+        };
+        articleDetailCache.set(art.id, art);
+        return art;
+      });
+
+      newsCache[cacheKey] = { timestamp: Date.now(), data: articles };
+      return articles;
+    } catch (error) {
+      console.error('Error fetching live sports:', error);
+      return [];
+    }
+  },
+
   async getArticleById(id: string): Promise<Article | undefined> {
-    // We don't cache detail here to ensure likes/views are fresh
+    // Check local cache first (crucial for sports API articles)
+    if (articleDetailCache.has(id)) {
+      return articleDetailCache.get(id);
+    }
+    
+    // Fallback to Supabase for native articles
     try {
       const { data, error } = await supabase
         .from('articles')

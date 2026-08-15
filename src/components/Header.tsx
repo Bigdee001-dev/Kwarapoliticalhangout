@@ -1,35 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, Facebook, Twitter, Instagram, Linkedin, UserCircle, ArrowRight, Home, Newspaper, Mic2, Users, Info, Mail } from 'lucide-react';
+import { Menu, X, Search, Facebook, Twitter, Instagram, Linkedin, UserCircle, ArrowRight, Home, Newspaper, Trophy, Users, Info, Mail } from 'lucide-react';
 import { NAV_ITEMS } from '../data';
 import Logo from './Logo';
 
 const Header: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(window.scrollY);
   
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
+      
+      // Immersive mode: hide on scroll down, show on scroll up
+      if (currentScrollY > lastScrollY.current + 10 && currentScrollY > 100) {
+        setIsHeaderVisible(false);
+      } else if (currentScrollY < lastScrollY.current - 10 || currentScrollY < 10) {
+        setIsHeaderVisible(true);
+      }
+      
+      lastScrollY.current = currentScrollY;
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-  }, [isMenuOpen]);
 
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
@@ -63,7 +65,7 @@ const Header: React.FC = () => {
     switch(label) {
       case 'Home': return <Home size={20} />;
       case 'News': return <Newspaper size={20} />;
-      case 'Media': return <Mic2 size={20} />;
+      case 'Sports': return <Trophy size={20} />;
       case 'People': return <Users size={20} />;
       case 'About': return <Info size={20} />;
       case 'Contact': return <Mail size={20} />;
@@ -73,7 +75,7 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="flex flex-col w-full z-50 relative">
+      <header className={`flex flex-col w-full z-50 fixed top-0 left-0 right-0 transition-transform duration-300 select-none ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         {/* Top Thin Bar - Hidden on Mobile */}
         <div className="bg-kph-charcoal text-white h-[40px] hidden lg:flex items-center justify-between px-4 lg:px-8 transition-colors duration-300">
           <div className="flex items-center space-x-4 text-xs font-medium text-gray-400">
@@ -93,7 +95,7 @@ const Header: React.FC = () => {
         </div>
 
         {/* Main Header - Sticky */}
-        <div className={`border-b border-gray-100 transition-all duration-300 sticky top-0 z-50 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-2' : 'bg-white py-3 lg:py-4'}`}>
+        <div className={`border-b border-gray-100 transition-all duration-300 w-full ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-2' : 'bg-white py-3 lg:py-4'}`}>
           <div className="container mx-auto px-4 lg:px-8 flex justify-between items-center">
             {/* Logo */}
             <Link to="/" className="flex items-center group relative z-50">
@@ -132,77 +134,18 @@ const Header: React.FC = () => {
             </div>
 
             {/* Mobile Actions */}
-            <div className="flex items-center gap-4 lg:hidden relative z-50">
+            <div className="flex items-center gap-2 sm:gap-4 lg:hidden relative z-50">
               <button 
                   onClick={() => setIsSearchOpen(true)}
                   className="text-kph-charcoal cursor-pointer hover:text-kph-red p-2"
                 >
                   <Search size={24} strokeWidth={2.5} />
               </button>
-              <button 
-                className="text-kph-charcoal hover:text-kph-red transition-colors p-2"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label="Toggle Menu"
-              >
-                {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Menu Drawer (Full Screen) */}
-        <div 
-          className={`fixed inset-0 bg-white z-40 transition-transform duration-300 ease-in-out lg:hidden flex flex-col pt-24 pb-8 px-6 ${
-            isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-        >
-           <nav className="flex-1 overflow-y-auto">
-             <ul className="space-y-2">
-               {NAV_ITEMS.map((item, index) => (
-                  <li key={item.path} style={{ transitionDelay: `${index * 50}ms` }} className={isMenuOpen ? 'animate-slide-up' : 'opacity-0'}>
-                    <Link
-                      to={item.path}
-                      onClick={() => setIsMenuOpen(false)}
-                      className={`flex items-center p-4 rounded-xl text-lg font-bold transition-all duration-200 ${
-                        location.pathname === item.path 
-                          ? 'bg-red-50 text-kph-red' 
-                          : 'text-kph-charcoal hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className={`mr-4 ${location.pathname === item.path ? 'text-kph-red' : 'text-gray-400'}`}>
-                        {getIconForLabel(item.label)}
-                      </span>
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-             </ul>
 
-             <div className="mt-8 border-t border-gray-100 pt-6 space-y-4">
-                 <Link 
-                   to="/login" 
-                   onClick={() => setIsMenuOpen(false)}
-                   className="flex items-center p-4 rounded-xl text-gray-600 font-bold hover:bg-gray-50"
-                 >
-                    <UserCircle size={20} className="mr-4 text-gray-400" /> Writer Portal
-                 </Link>
-             </div>
-           </nav>
-
-           {/* Mobile Menu Footer */}
-           <div className="mt-auto">
-              <button className="w-full bg-kph-red text-white text-center font-bold py-4 rounded-xl shadow-lg mb-8">
-                  Subscribe for Updates
-              </button>
-              
-              <div className="flex justify-center space-x-8 text-gray-400">
-                <a href="#" className="hover:text-kph-red"><Twitter size={24} /></a>
-                <a href="https://www.instagram.com/kwarapoliticalhangout?igsh=aG10ejRrM213bDZu" target="_blank" rel="noopener noreferrer" className="hover:text-kph-red"><Instagram size={24} /></a>
-                <a href="#" className="hover:text-kph-red"><Linkedin size={24} /></a>
-                <a href="https://www.facebook.com/share/16WfzEJG78/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="hover:text-kph-red"><Facebook size={24} /></a>
-              </div>
-           </div>
-        </div>
       </header>
 
       {/* Full Screen Search Overlay */}
@@ -228,7 +171,7 @@ const Header: React.FC = () => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Type to search..."
-                      className="w-full text-3xl md:text-5xl font-bold bg-transparent border-b-2 border-gray-200 py-4 focus:outline-none focus:border-kph-red placeholder-gray-300 transition-colors"
+                      className="w-full text-2xl sm:text-3xl md:text-5xl font-bold bg-transparent border-b-2 border-gray-200 py-4 focus:outline-none focus:border-kph-red placeholder-gray-300 transition-colors"
                     />
                     <button 
                       type="submit"

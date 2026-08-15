@@ -5,7 +5,7 @@ export const NAV_ITEMS = [
   { label: 'Home', path: '/' },
   { label: 'News', path: '/news' },
   { label: 'Politics', path: '/politics' },
-  { label: 'Media', path: '/media' },
+  { label: 'Sports', path: '/sports' },
   { label: 'People', path: '/people' },
   { label: 'About', path: '/about' },
   { label: 'Contact', path: '/contact' },

@@ -59,7 +59,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
           }`}
         style={{ animationDelay: `${delay}ms` }}
       >
-        <div className="w-full sm:w-1/3 h-40 sm:h-auto overflow-hidden relative shrink-0">
+        <div className="w-full sm:w-1/3 aspect-[16/9] sm:aspect-auto overflow-hidden relative shrink-0">
           <ArticleMedia
             article={article}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"

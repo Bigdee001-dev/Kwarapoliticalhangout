@@ -197,8 +197,8 @@ const ArticleDetail: React.FC = () => {
         />
       </div>
 
-      {/* Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-zinc-100 h-14 flex items-center px-4 md:px-8 transition-all duration-300 w-full overflow-hidden">
+      {/* Navigation Bar (Desktop Only) */}
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-zinc-100 h-14 hidden lg:flex items-center px-4 md:px-8 transition-all duration-300 w-full overflow-hidden">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-4">
           <div className="flex items-center gap-4 md:gap-8 shrink-0">
             <Link to="/" className="scale-75 md:scale-90 transform-gpu origin-left">
@@ -225,8 +225,13 @@ const ArticleDetail: React.FC = () => {
         </div>
       </header>
 
+      {/* Mobile Floating Back Button */}
+      <Link to="/" className="lg:hidden absolute top-4 left-4 z-[60] w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-lg active:scale-95 transition-transform">
+        <ChevronLeft size={24} />
+      </Link>
+
       {/* Hero Section */}
-      <section className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[75vh] bg-black overflow-hidden hero-section">
+      <section className="relative w-full h-[60vh] lg:h-[75vh] bg-black overflow-hidden hero-section">
         <div className="hero-grain opacity-10" />
 
         <motion.img
@@ -419,6 +424,7 @@ const ArticleDetail: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Comment</label>
                 <textarea
+                  id="comment-textarea"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="Add your thoughts..."
@@ -508,26 +514,56 @@ const ArticleDetail: React.FC = () => {
     </div>
   </div>
 
-{/* Floating Actions */ }
-<div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[60] flex flex-col gap-3">
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={toggleLike}
-    disabled={isLiked}
-    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg flex items-center justify-center transition-all ${isLiked ? 'bg-kph-red text-white' : 'bg-white text-zinc-400 border border-zinc-100'}`}
-  >
-    <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
-  </motion.button>
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={handleShare}
-    className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-kph-red transition-all"
-  >
-    <Share2 size={18} />
-  </motion.button>
-</div>
+      {/* Sticky Actions Bar (Mobile) / Floating Actions (Desktop) */}
+      <div className="fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-between px-4 py-3 bg-white/95 backdrop-blur-xl border-t border-zinc-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe lg:bottom-8 lg:right-8 lg:left-auto lg:w-auto lg:flex-col lg:gap-3 lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none select-none">
+        
+        {/* Fake Comment Input for Mobile */}
+        <div 
+          className="lg:hidden flex-grow mr-2"
+          onClick={() => {
+            const commentsSection = document.getElementById('comments');
+            if (commentsSection) {
+              commentsSection.scrollIntoView({ behavior: 'smooth' });
+              setTimeout(() => {
+                document.getElementById('comment-textarea')?.focus();
+              }, 600);
+            }
+          }}
+        >
+          <div className="bg-zinc-100 rounded-full py-2.5 px-4 text-sm text-zinc-500 font-medium flex items-center cursor-pointer active:scale-[0.98] transition-transform">
+            Write a comment...
+          </div>
+        </div>
+
+        <div className="flex lg:flex-col gap-2 lg:gap-3 items-center">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleLike}
+            disabled={isLiked}
+            className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full lg:shadow-lg flex items-center justify-center transition-all ${isLiked ? 'bg-transparent text-kph-red lg:bg-kph-red lg:text-white' : 'bg-transparent lg:bg-white text-zinc-600 lg:text-zinc-400 lg:border lg:border-zinc-100 hover:text-zinc-900'}`}
+          >
+            <Heart size={22} fill={isLiked ? 'currentColor' : 'none'} />
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-10 h-10 lg:w-12 lg:h-12 rounded-full lg:shadow-lg flex items-center justify-center bg-transparent lg:bg-white text-zinc-600 lg:text-zinc-400 lg:border lg:border-zinc-100 hover:text-zinc-900 transition-all"
+          >
+            <Bookmark size={22} />
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleShare}
+            className="w-10 h-10 lg:w-12 lg:h-12 bg-transparent lg:bg-zinc-900 text-zinc-600 lg:text-white rounded-full lg:shadow-lg flex items-center justify-center hover:text-kph-red lg:hover:bg-kph-red transition-all"
+          >
+            <Share2 size={22} />
+          </motion.button>
+        </div>
+      </div>
     </div >
   );
 };

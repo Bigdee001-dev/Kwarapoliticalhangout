@@ -52,11 +52,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ featuredArticle, subFeaturedA
       <div className="hero-grain" />
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10 py-6 sm:py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 lg:gap-7" style={{ minHeight: '560px' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 lg:gap-7 min-h-[400px] lg:min-h-[560px]">
 
           {/* ── Featured / Video card ─────────────────────────────────────── */}
           {featuredArticle && (
-            <div className="lg:col-span-3 relative group overflow-hidden rounded-2xl sm:rounded-3xl h-[420px] sm:h-[480px] lg:h-auto shadow-2xl border border-white/[0.06] bg-black hero-card">
+            <div className="lg:col-span-3 relative group overflow-hidden rounded-2xl sm:rounded-3xl min-h-[400px] sm:min-h-[480px] lg:min-h-0 lg:aspect-[4/3] shadow-2xl border border-white/[0.06] bg-black hero-card">
               {/* Cinematic Grain inside the card for more texture */}
               <div className="hero-grain opacity-10" />
 
@@ -121,11 +121,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ featuredArticle, subFeaturedA
           )}
 
         {/* ── Sub-featured articles panel ───────────────────────────────── */}
-        <div className="lg:col-span-2 grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-5 h-full">
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-5 h-full">
           {subFeaturedArticles.map((article, idx) => (
             <div
               key={article.id}
-              className="relative group overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl h-44 sm:h-52 lg:h-auto shadow-xl border border-white/[0.06] bg-gray-900 flex-1 hero-sub-card"
+              className="relative group overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl min-h-[200px] sm:min-h-[220px] lg:min-h-0 lg:aspect-video shadow-xl border border-white/[0.06] bg-gray-900 flex-1 hero-sub-card"
               style={{ animationDelay: `${idx * 120}ms` }}
             >
               <Link to={`/article/${article.id}`} className="block w-full h-full">
