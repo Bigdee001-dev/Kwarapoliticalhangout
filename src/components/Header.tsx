@@ -7,6 +7,7 @@ import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 const Header: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +43,11 @@ const Header: React.FC = () => {
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [isSearchOpen]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,10 +151,61 @@ const Header: React.FC = () => {
                 >
                   <Search size={24} strokeWidth={2.5} />
               </button>
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-kph-charcoal hover:text-kph-red p-2 transition-colors"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              </button>
             </div>
           </div>
         </div>
 
+        {/* Mobile Navigation Menu */}
+        <div 
+          className={`lg:hidden fixed inset-0 top-[60px] bg-white z-40 transition-transform duration-300 ease-in-out ${
+            isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          } overflow-y-auto`}
+        >
+          <div className="flex flex-col p-4 space-y-2 pb-24">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center space-x-4 p-4 rounded-xl font-bold text-lg transition-colors ${
+                  location.pathname === item.path
+                    ? 'bg-red-50 text-kph-red'
+                    : 'text-kph-charcoal hover:bg-gray-50'
+                }`}
+              >
+                <div className={`${location.pathname === item.path ? 'text-kph-red' : 'text-gray-400'}`}>
+                  {getIconForLabel(item.label)}
+                </div>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+
+            <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col space-y-4">
+              <Link 
+                to="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center space-x-4 p-4 text-gray-600 hover:bg-gray-50 rounded-xl"
+              >
+                <UserCircle size={24} className="text-gray-400" />
+                <span className="font-bold">Writer Login</span>
+              </Link>
+
+              <div className="flex justify-center space-x-6 pt-6">
+                <a href="#" className="text-gray-400 hover:text-kph-red transition-colors"><Twitter size={24} /></a>
+                <a href="https://www.instagram.com/kwarapoliticalhangout" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-kph-red transition-colors"><Instagram size={24} /></a>
+                <a href="#" className="text-gray-400 hover:text-kph-red transition-colors"><Linkedin size={24} /></a>
+                <a href="https://www.facebook.com/share/16WfzEJG78/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-kph-red transition-colors"><Facebook size={24} /></a>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </header>
 
