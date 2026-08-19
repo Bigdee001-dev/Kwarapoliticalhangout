@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
+
 import Home from './pages/Home';
 import MobileHome from './pages/MobileHome';
 import People from './pages/People';
@@ -15,6 +16,7 @@ import SportsPage from './pages/SportsPage';
 import SportsArticleDetail from './pages/SportsArticleDetail';
 import About from './pages/About';
 import SearchResults from './pages/SearchResults';
+import SavedPage from './pages/SavedPage';
 import WriterStudio from './pages/WriterStudio';
 import AdminApp from '../apps/admin/src/App';
 import CookieBanner from './components/CookieBanner';
@@ -22,6 +24,22 @@ import BottomNav from './components/BottomNav';
 import OfflineBanner from './components/OfflineBanner';
 import InstallPrompt from './components/InstallPrompt';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
+
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = React.useState(false);
+  
+  React.useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
+  
+  return matches;
+};
 
 // ScrollToTop component to reset scroll on route change
 const ScrollToTopWrapper = () => {
@@ -34,36 +52,43 @@ const ScrollToTopWrapper = () => {
   return null;
 };
 
-// Wrapper to hide Header/Footer for Dashboard and Studio
-const LayoutWrapper: React.FC<{ children: React.ReactNode, isStandalone: boolean }> = ({ children, isStandalone }) => {
+const LayoutWrapper: React.FC<{ children: React.ReactNode, isMobilePWA: boolean, isStandalone: boolean }> = ({ children, isMobilePWA, isStandalone }) => {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin') || location.pathname.startsWith('/writer-studio');
   const isArticleDetail = location.pathname.startsWith('/article/');
-  const isMobileHome = isStandalone && location.pathname === '/';
+  const isSavedPage = location.pathname.startsWith('/saved');
+  const isMobileHome = isMobilePWA && location.pathname === '/';
+
+  const hideHeader = isDashboard || isArticleDetail || isMobileHome;
+  const hideFooter = isDashboard || isArticleDetail || isMobileHome || isSavedPage;
 
   return (
     <div className={`flex flex-col min-h-screen font-sans text-kph-charcoal ${!isDashboard ? 'pb-16 lg:pb-0' : ''}`}>
       <OfflineBanner />
       <InstallPrompt />
-      {!isDashboard && !isArticleDetail && !isMobileHome && <Header />}
-      <main className={`flex-grow relative ${!isDashboard && !isArticleDetail && !isMobileHome ? 'pt-[80px] lg:pt-[100px]' : ''}`}>
+      {!hideHeader && <Header />}
+      <main className={`flex-grow relative ${!hideHeader ? 'pt-[80px] lg:pt-[100px]' : ''}`}>
         {children}
       </main>
-      {!isDashboard && !isArticleDetail && !isMobileHome && <Footer />}
-      {!isDashboard && !isArticleDetail && <BottomNav />}
+      {!hideFooter && <Footer />}
+      {!isDashboard && !isArticleDetail && isStandalone && <BottomNav />}
     </div>
   );
 };
 
 const AppContent = () => {
   const { isStandalone } = useInstallPrompt();
+  const isMobile = useMediaQuery('(max-width: 1023px)');
+  
+  // Only serve the mobile-optimized PWA layout if it's both standalone AND a mobile screen
+  const isMobilePWA = isStandalone && isMobile;
   
   return (
     <Router>
       <ScrollToTopWrapper />
-      <LayoutWrapper isStandalone={isStandalone}>
+      <LayoutWrapper isMobilePWA={isMobilePWA} isStandalone={isStandalone}>
         <Routes>
-          <Route path="/" element={isStandalone ? <MobileHome /> : <Home />} />
+          <Route path="/" element={isMobilePWA ? <MobileHome /> : <Home />} />
           <Route path="/people" element={<People />} />
           <Route path="/article/:id" element={<ArticleDetail />} />
           <Route path="/contact" element={<Contact />} />
@@ -77,6 +102,7 @@ const AppContent = () => {
           <Route path="/politics" element={<NewsCategory title="Politics" topic="Politics" description="Latest political updates and analysis." />} />
           <Route path="/sports" element={<SportsPage />} />
           <Route path="/sports/article/:id" element={<SportsArticleDetail />} />
+          <Route path="/saved" element={<SavedPage />} />
         </Routes>
       </LayoutWrapper>
       <CookieBanner />

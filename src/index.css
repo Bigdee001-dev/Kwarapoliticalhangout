@@ -283,6 +283,14 @@
   .glass-card {
     @apply bg-white/10 backdrop-blur-xl border border-white/20;
   }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* ─── Hero Section Styles ─────────────────────────────────────────────────── */

@@ -1,11 +1,11 @@
-import React from 'react';
-import { Calendar, User, Clock, ArrowRight, Video, Play } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, User, Clock, ArrowRight, Video, Play, Heart, MessageCircle, Share, MoreHorizontal, Sparkles, Bookmark } from 'lucide-react';
 import { Article } from '../types';
 import { Link } from 'react-router-dom';
 
 interface ArticleCardProps {
   article: Article;
-  variant?: 'grid' | 'list' | 'compact';
+  variant?: 'grid' | 'list' | 'compact' | 'feed';
   delay?: number;
   darkMode?: boolean;
 }
@@ -49,6 +49,107 @@ export const ArticleMedia: React.FC<{ article: Article; className: string }> = (
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', delay = 0, darkMode = false }) => {
   const hasVideo = !!article.videoUrl;
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('savedArticles') || '[]');
+    setIsSaved(saved.some((a: any) => a.id === article.id));
+  }, [article.id]);
+
+  const toggleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let saved = JSON.parse(localStorage.getItem('savedArticles') || '[]');
+    if (isSaved) {
+      saved = saved.filter((a: any) => a.id !== article.id);
+    } else {
+      saved.push(article);
+    }
+    localStorage.setItem('savedArticles', JSON.stringify(saved));
+    setIsSaved(!isSaved);
+  };
+
+  if (variant === 'feed') {
+    return (
+      <div 
+        className={`flex-1 flex flex-col bg-white rounded-3xl shadow-sm hover:shadow-xl transition-shadow duration-300 border border-zinc-100 overflow-hidden w-full max-w-full h-full`}
+      >
+        {/* Top Header */}
+        <div className="flex items-center justify-between p-4 pb-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-kph-red text-white flex items-center justify-center font-bold text-lg overflow-hidden relative shadow-sm">
+               {article.author.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-[15px] text-zinc-900 leading-none mb-1 flex items-center gap-1">
+                {article.author}
+                <svg className="w-[14px] h-[14px] text-blue-500 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              </span>
+              <span className="text-[13px] text-zinc-500 leading-none">
+                Local publisher &middot; {article.date}
+              </span>
+            </div>
+          </div>
+          <button className="text-zinc-400 p-2 hover:bg-zinc-50 rounded-full">
+            <MoreHorizontal size={20} />
+          </button>
+        </div>
+
+        {/* Title */}
+        <Link to={`/article/${article.id}`} className="px-4 pb-3 block">
+          <h3 className="text-[19px] sm:text-[22px] font-bold text-zinc-900 leading-[1.3] font-sans">
+            {article.title}
+          </h3>
+        </Link>
+
+        {/* Image */}
+        <Link to={`/article/${article.id}`} className="block w-full relative bg-zinc-100 aspect-video sm:aspect-[16/10] overflow-hidden group">
+           <ArticleMedia article={article} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+           {hasVideo && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+              <div className="w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center">
+                <Play size={20} className="text-kph-red ml-1" />
+              </div>
+            </div>
+           )}
+           <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold text-zinc-700 shadow border border-zinc-200/50 uppercase tracking-widest">
+             {article.category}
+           </div>
+        </Link>
+
+
+
+        {/* Action Bar */}
+        <div className="px-4 py-3 border-t border-zinc-50 flex items-center justify-between mt-auto">
+           <div className="flex items-center gap-2">
+             <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
+               <Heart size={18} />
+               <span className="text-[13px] font-bold">2</span>
+             </button>
+             <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
+               <MessageCircle size={18} />
+               <span className="text-[13px] font-bold">1</span>
+             </button>
+           </div>
+           
+           <div className="flex items-center gap-2">
+             <button 
+               onClick={toggleSave}
+               className={`p-2 rounded-full transition-colors border flex items-center justify-center ${isSaved ? 'bg-kph-red/10 border-kph-red/20 text-kph-red' : 'bg-zinc-50 border-zinc-100 text-zinc-600 hover:bg-zinc-100'}`}
+             >
+               <Bookmark size={18} className={isSaved ? "fill-current" : ""} />
+             </button>
+             <button className="p-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100 flex items-center justify-center">
+               <Share size={18} />
+             </button>
+             <button className="p-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
+               <MoreHorizontal size={18} />
+             </button>
+           </div>
+        </div>
+      </div>
+    );
+  }
 
   if (variant === 'list') {
     return (

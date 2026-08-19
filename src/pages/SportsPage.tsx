@@ -4,7 +4,7 @@ import { NewsService } from '../services/newsService';
 import { Article } from '../types';
 import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
-import { ArticleMedia } from '../components/ArticleCard';
+import ArticleCard, { ArticleMedia } from '../components/ArticleCard';
 import { motion, AnimatePresence } from 'motion/react';
 
 const SportsPage: React.FC = () => {
@@ -64,96 +64,60 @@ const SportsPage: React.FC = () => {
     );
   }
 
-  const featured = articles[0];
-  const feed = articles.slice(1);
+  const topNews = articles.slice(0, 5);
+  const verticalNews = articles.slice(5);
 
   return (
-    <div className="bg-zinc-50 min-h-screen pb-24 font-sans selection:bg-kph-red/10 selection:text-kph-red">
+    <div className="bg-zinc-100 min-h-screen pb-24 font-sans selection:bg-kph-red/10 selection:text-kph-red">
       <SEO
         title="Live Sports | KPH News"
         description="The latest live sports updates and news."
       />
 
       {/* Dynamic Header */}
-      <div className="bg-white px-4 py-6 border-b border-zinc-100 sticky top-0 z-40 bg-white/95 backdrop-blur-xl select-none">
+      <div className="bg-white px-4 py-4 border-b border-zinc-200 sticky top-0 z-40 bg-white/95 backdrop-blur-xl select-none flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-kph-red">
             <Trophy size={20} className="fill-kph-red/20" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-zinc-900 font-serif leading-none">Live Sports</h1>
-            <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold mt-1">Real-Time Global Coverage</p>
+            <h1 className="text-xl font-bold text-zinc-900 tracking-tight leading-none">Live Sports</h1>
+            <p className="text-[11px] text-zinc-500 font-medium mt-1">Real-Time Global Coverage</p>
           </div>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          {/* Featured Story */}
-          {featured && (
-            <section className="px-4 py-4">
-              <Link to={`/sports/article/${featured.id}`} className="block relative rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-100 aspect-[4/5] bg-black active:scale-[0.98] transition-transform group">
-                <ArticleMedia article={featured} className="w-full h-full object-cover opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-                
-                <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-red-500 text-white px-2.5 py-1 rounded-full shadow-lg">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest">Live</span>
-                </div>
+      <main className="max-w-xl mx-auto w-full pt-4 px-2 sm:px-4">
+        {/* Horizontal Feed for Top News */}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key="feed-horizontal-sports"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-2 px-2 gap-4"
+          >
+            {topNews.map((article, index) => (
+              <div key={article.id} className="snap-center shrink-0 w-[88vw] max-w-[340px] h-full flex flex-col">
+                <ArticleCard article={article} variant="feed" delay={index * 50} />
+              </div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
 
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight font-serif drop-shadow-lg mb-3">
-                    {featured.title}
-                  </h2>
-                  <p className="text-zinc-200 text-sm line-clamp-2 mb-4 font-medium leading-relaxed">
-                    {featured.excerpt}
-                  </p>
-                  <div className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest flex items-center gap-3">
-                    <span className="flex items-center gap-1.5">
-                      <Trophy size={12} className="text-kph-red" />
-                      {featured.sourceName}
-                    </span>
-                    <span>•</span>
-                    <span>{new Date(featured.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
-              </Link>
-            </section>
-          )}
-
-          {/* Vertical Feed */}
-          <section className="px-4 mt-2">
-            <h3 className="font-black text-lg text-zinc-900 mb-4 px-1 select-none font-serif">Latest Updates</h3>
-            <div className="flex flex-col gap-4">
-              {feed.map(article => (
-                <Link key={article.id} to={`/sports/article/${article.id}`} className="flex gap-4 p-3.5 rounded-[1.5rem] bg-white border border-zinc-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-all hover:shadow-[0_4px_25px_rgba(0,0,0,0.06)] group">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-2xl overflow-hidden bg-zinc-100 shadow-inner relative">
-                    <ArticleMedia article={article} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between py-1">
-                    <div>
-                      <span className="text-[9px] font-bold tracking-widest text-kph-red uppercase mb-1.5 block flex items-center gap-1">
-                        <span className="w-1 h-1 rounded-full bg-kph-red animate-pulse"></span>
-                        {article.sourceName}
-                      </span>
-                      <h4 className="text-[14px] sm:text-[15px] font-bold text-zinc-900 leading-snug line-clamp-3 font-serif">
-                        {article.title}
-                      </h4>
-                    </div>
-                    <div className="text-[10px] font-bold text-zinc-400 mt-3 uppercase tracking-wider">
-                      {new Date(article.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </Link>
+        {/* Vertical Feed for the rest */}
+        {verticalNews.length > 0 && (
+          <div className="mt-2 flex flex-col px-2">
+            <h2 className="text-lg font-bold text-zinc-900 mb-4 tracking-tight">More Sports Stories</h2>
+            <div className="flex flex-col gap-4 pb-8">
+              {verticalNews.map((article, index) => (
+                <ArticleCard key={article.id} article={article} variant="feed" delay={index * 50} />
               ))}
             </div>
-          </section>
-        </motion.div>
-      </AnimatePresence>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

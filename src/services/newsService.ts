@@ -61,10 +61,60 @@ export const NewsService = {
         return art;
       });
 
+      if (topic === 'General') {
+        // Fetch standard world/general news from Guardian to feature on home screen
+        const globalNews = await this.fetchGuardianNews('');
+        articles.push(...globalNews);
+      } else if (topic === 'Nigeria') {
+        const naijaNews = await this.fetchGuardianNews('nigeria');
+        articles.push(...naijaNews);
+      }
+
       newsCache[cacheKey] = { timestamp: Date.now(), data: articles };
       return articles;
     } catch (error) {
       console.error('Error fetching articles:', error);
+      return [];
+    }
+  },
+
+  async fetchGuardianNews(query: string, section?: string): Promise<Article[]> {
+    try {
+      let url = `https://content.guardianapis.com/search?api-key=ec05b8cc-27af-4bed-910e-0199cd646792&show-fields=headline,thumbnail,trailText,body,byline,firstPublicationDate,shortUrl&order-by=newest`;
+      if (query) url += `&q=${encodeURIComponent(query)}`;
+      if (section) url += `&section=${section}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.response?.status !== 'ok') {
+        return [];
+      }
+
+      return data.response.results.map((d: any) => {
+        const art: Article = {
+          id: d.id.replace(/\//g, '-'), // Make ID URL safe just in case
+          title: d.fields?.headline || d.webTitle,
+          excerpt: d.fields?.trailText?.replace(/<[^>]+>/g, '') || '', // Strip HTML from trailText
+          content: d.fields?.body || '',
+          category: section === 'sport' ? 'Sports' : 'News',
+          author: d.fields?.byline || 'The Guardian',
+          date: d.webPublicationDate,
+          readTime: '5 min read',
+          imageUrl: d.fields?.thumbnail || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1000&auto=format&fit=crop',
+          videoUrl: '',
+          sourceUrl: d.webUrl,
+          sourceName: 'The Guardian',
+          isFeatured: false,
+          status: 'Published',
+          views: Math.floor(Math.random() * 500) + 100,
+          likes: Math.floor(Math.random() * 200) + 10
+        };
+        articleDetailCache.set(art.id, art);
+        return art;
+      });
+    } catch (error) {
+      console.error('Error fetching Guardian news:', error);
       return [];
     }
   },
@@ -77,34 +127,15 @@ export const NewsService = {
     }
 
     try {
-      const response = await fetch('https://newsdata.io/api/1/latest?apikey=pub_510e28e84bbb4e2f81191a52b9395b0a&category=sports&language=en');
-      const data = await response.json();
+      const naijaSports = await this.fetchGuardianNews('nigeria', 'sport');
+      const globalSports = await this.fetchGuardianNews('', 'sport');
       
-      if (data.status !== 'success') {
-        throw new Error('Failed to fetch sports news');
-      }
-
-      const articles: Article[] = data.results.map((d: any) => {
-        const art: Article = {
-          id: d.article_id,
-          title: d.title,
-          excerpt: d.description || '',
-          content: d.content || d.description || '',
-          category: 'Sports',
-          author: d.creator ? d.creator[0] : (d.source_name || 'KPH Sports'),
-          date: d.pubDate,
-          readTime: '4 min read',
-          imageUrl: d.image_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1000&auto=format&fit=crop',
-          videoUrl: d.video_url || '',
-          sourceUrl: d.link,
-          sourceName: d.source_name || 'KPH Sports',
-          isFeatured: false,
-          status: 'published',
-          views: Math.floor(Math.random() * 500) + 100,
-          likes: Math.floor(Math.random() * 200) + 10
-        };
-        articleDetailCache.set(art.id, art);
-        return art;
+      const combined = [...naijaSports, ...globalSports];
+      const uniqueIds = new Set();
+      const articles = combined.filter(a => {
+        if (uniqueIds.has(a.id)) return false;
+        uniqueIds.add(a.id);
+        return true;
       });
 
       newsCache[cacheKey] = { timestamp: Date.now(), data: articles };

@@ -1,10 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Youtube, Shield, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Youtube, Shield, Instagram, Smartphone } from 'lucide-react';
 import { NAV_ITEMS } from '../data';
 import Logo from './Logo';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 const Footer: React.FC = () => {
+  const { promptable, isStandalone } = useInstallPrompt();
+
+  const handleInstallClick = () => {
+    if (promptable) {
+      promptable.prompt();
+    } else {
+      alert("To install the app, tap the Share button in your browser and select 'Add to Home Screen'.");
+    }
+  };
   return (
     <footer className="bg-kph-charcoal text-white pt-12 pb-6">
       <div className="container mx-auto px-4 lg:px-8">
@@ -25,21 +35,31 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-lg font-bold mb-4 border-b border-gray-600 pb-2 inline-block">Quick Links</h3>
-            <ul className="grid grid-cols-2 gap-2">
-              {NAV_ITEMS.map(item => (
-                <li key={item.path}>
-                  <Link to={item.path} className="text-gray-300 hover:text-kph-red text-sm transition">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-              <li><Link to="/login" className="text-gray-300 hover:text-kph-red text-sm transition font-semibold text-kph-accent">Writer Portal</Link></li>
-              <li><Link to="#" className="text-gray-300 hover:text-kph-red text-sm transition">Terms of Service</Link></li>
-            </ul>
-          </div>
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-bold mb-4 border-b border-gray-600 pb-2 inline-block">Quick Links</h3>
+              <ul className="grid grid-cols-2 gap-2 mb-6">
+                {NAV_ITEMS.map(item => (
+                  <li key={item.path}>
+                    <Link to={item.path} className="text-gray-300 hover:text-kph-red text-sm transition">
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+                <li><Link to="/login" className="text-gray-300 hover:text-kph-red text-sm transition font-semibold text-kph-accent">Writer Portal</Link></li>
+                <li><Link to="#" className="text-gray-300 hover:text-kph-red text-sm transition">Terms of Service</Link></li>
+              </ul>
+
+              {!isStandalone && (
+                <button 
+                  onClick={handleInstallClick}
+                  className="flex items-center gap-2 bg-kph-red/20 hover:bg-kph-red text-white px-4 py-2.5 rounded-lg transition-all border border-kph-red/50 text-sm font-bold w-full sm:w-auto justify-center shadow-lg active:scale-95"
+                >
+                  <Smartphone size={16} />
+                  Install Mobile App
+                </button>
+              )}
+            </div>
 
           {/* Contact */}
           <div>

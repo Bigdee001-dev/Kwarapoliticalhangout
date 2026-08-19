@@ -1,15 +1,17 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Newspaper, Trophy, UserCircle } from 'lucide-react';
+import { Home, Newspaper, Trophy, Bookmark } from 'lucide-react';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
+  const { isStandalone } = useInstallPrompt();
 
   const navItems = [
     { label: 'Home', path: '/', icon: <Home size={22} /> },
     { label: 'News', path: '/news', icon: <Newspaper size={22} /> },
-    { label: 'Sports', path: '/sports', icon: <Trophy size={22} /> },
-    { label: 'Studio', path: '/login', icon: <UserCircle size={22} /> },
+    ...(isStandalone ? [{ label: 'Sports', path: '/sports', icon: <Trophy size={22} /> }] : []),
+    { label: 'Saved', path: '/saved', icon: <Bookmark size={22} /> },
   ];
 
   return (

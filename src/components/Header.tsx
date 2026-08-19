@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, Facebook, Twitter, Instagram, Linkedin, UserCircle, ArrowRight, Home, Newspaper, Trophy, Users, Info, Mail } from 'lucide-react';
 import { NAV_ITEMS } from '../data';
 import Logo from './Logo';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 const Header: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -14,6 +15,9 @@ const Header: React.FC = () => {
   
   const location = useLocation();
   const navigate = useNavigate();
+  const { isStandalone } = useInstallPrompt();
+
+  const navItems = NAV_ITEMS.filter(item => isStandalone || item.label !== 'Sports');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -104,7 +108,7 @@ const Header: React.FC = () => {
 
             {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center space-x-8">
-              {NAV_ITEMS.map((item) => (
+              {navItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}

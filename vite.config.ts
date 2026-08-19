@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
     const env = loadEnv(mode, '.', '');
     return {
       server: {
@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
             ]
           },
           workbox: {
+            globPatterns: command === 'serve' ? [] : ['**/*.{js,css,html,ico,png,svg}'],
             runtimeCaching: [
               {
                 urlPattern: /^https:\/\/ajqzyygzgjrydxilzzto\.supabase\.co\/rest\/v1\/.*/i,

@@ -109,25 +109,14 @@ const SportsArticleDetail: React.FC = () => {
         </div>
 
         {/* Abstract/Summary */}
-        <div className="prose prose-zinc prose-lg text-zinc-700 leading-relaxed font-serif mb-10">
-          <p className="text-xl sm:text-2xl leading-relaxed">
-            {article.excerpt || article.content}
-          </p>
-        </div>
-
-        {/* Call To Action */}
-        <div className="bg-zinc-50 border border-zinc-100 rounded-[2rem] p-8 text-center mt-12 mb-8">
-          <h3 className="text-lg font-black text-zinc-900 font-serif mb-2">Read the Full Coverage</h3>
-          <p className="text-sm text-zinc-500 mb-6">This is a live summary. Tap below to read the complete story directly on {article.sourceName}.</p>
-          <a
-            href={article.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto bg-zinc-900 text-white font-bold py-4 px-8 rounded-xl hover:bg-kph-red transition-all active:scale-95 text-[11px] uppercase tracking-widest shadow-xl"
-          >
-            Open in {article.sourceName}
-            <ExternalLink size={16} />
-          </a>
+        <div className="prose prose-zinc prose-lg text-zinc-700 leading-relaxed font-serif mb-10 pb-8">
+          {article.content ? (
+            <div className="article-body-content text-base sm:text-lg [&>p]:mb-4 [&>figure]:my-6 [&_img]:w-full [&_img]:rounded-xl" dangerouslySetInnerHTML={{ __html: article.content }} />
+          ) : (
+            <p className="text-xl sm:text-2xl leading-relaxed">
+              {article.excerpt}
+            </p>
+          )}
         </div>
       </motion.div>
 

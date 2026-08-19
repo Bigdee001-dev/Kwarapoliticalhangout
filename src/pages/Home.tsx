@@ -308,7 +308,7 @@ const Home: React.FC = () => {
                 </div>
                 <Link to="/news" className="text-kph-red font-bold text-sm flex items-center gap-1">View Archive <ChevronRight size={18} /></Link>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {feedArticles.map((article, idx) => (
                   <ArticleCard
                     key={`feed-${article.id}`}
