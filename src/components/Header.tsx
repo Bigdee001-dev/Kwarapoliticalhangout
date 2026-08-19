@@ -152,62 +152,53 @@ const Header: React.FC = () => {
                   <Search size={24} strokeWidth={2.5} />
               </button>
               <button 
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                onClick={() => setIsMobileMenuOpen(true)}
                 className="text-kph-charcoal hover:text-kph-red p-2 transition-colors"
-                aria-label="Toggle menu"
+                aria-label="Open menu"
               >
-                {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                <Menu size={28} />
               </button>
             </div>
           </div>
         </div>
-
-        {/* Mobile Navigation Menu */}
-        <div 
-          className={`lg:hidden fixed inset-0 top-[60px] bg-white z-40 transition-transform duration-300 ease-in-out ${
-            isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-          } overflow-y-auto`}
-        >
-          <div className="flex flex-col p-4 space-y-2 pb-24">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center space-x-4 p-4 rounded-xl font-bold text-lg transition-colors ${
-                  location.pathname === item.path
-                    ? 'bg-red-50 text-kph-red'
-                    : 'text-kph-charcoal hover:bg-gray-50'
-                }`}
-              >
-                <div className={`${location.pathname === item.path ? 'text-kph-red' : 'text-gray-400'}`}>
-                  {getIconForLabel(item.label)}
-                </div>
-                <span>{item.label}</span>
-              </Link>
-            ))}
-
-            <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col space-y-4">
-              <Link 
-                to="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center space-x-4 p-4 text-gray-600 hover:bg-gray-50 rounded-xl"
-              >
-                <UserCircle size={24} className="text-gray-400" />
-                <span className="font-bold">Writer Login</span>
-              </Link>
-
-              <div className="flex justify-center space-x-6 pt-6">
-                <a href="#" className="text-gray-400 hover:text-kph-red transition-colors"><Twitter size={24} /></a>
-                <a href="https://www.instagram.com/kwarapoliticalhangout" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-kph-red transition-colors"><Instagram size={24} /></a>
-                <a href="#" className="text-gray-400 hover:text-kph-red transition-colors"><Linkedin size={24} /></a>
-                <a href="https://www.facebook.com/share/16WfzEJG78/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-kph-red transition-colors"><Facebook size={24} /></a>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </header>
+
+      {/* Mobile Menu Full Screen Overlay */}
+      <div 
+        className={`fixed inset-0 bg-white z-[60] transition-all duration-300 ease-in-out lg:hidden flex flex-col items-center justify-center ${
+          isMobileMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-10'
+        }`}
+      >
+        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center border-b border-gray-100">
+          <span className="font-black text-xl text-kph-charcoal tracking-tight">MENU</span>
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-2 text-gray-400 hover:text-kph-red transition-colors rounded-full hover:bg-red-50"
+          >
+            <X size={32} />
+          </button>
+        </div>
+        
+        <div className="flex-1 w-full max-w-sm flex flex-col justify-center items-center px-6 space-y-6">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`w-full flex items-center justify-center space-x-4 p-4 rounded-2xl font-bold text-2xl transition-colors ${
+                location.pathname === item.path
+                  ? 'bg-red-50 text-kph-red shadow-sm'
+                  : 'text-kph-charcoal hover:bg-gray-50'
+              }`}
+            >
+              <div className={`${location.pathname === item.path ? 'text-kph-red' : 'text-gray-400'}`}>
+                {getIconForLabel(item.label)}
+              </div>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* Full Screen Search Overlay */}
       {isSearchOpen && (
