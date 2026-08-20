@@ -23,18 +23,21 @@ export default defineConfig(({ mode, command }) => {
             description: 'The leading platform for breaking news, political analysis, and government reporting in Kwara State.',
             theme_color: '#8B0000',
             background_color: '#F8F9FA',
+            start_url: '/',
             display: 'standalone',
             orientation: 'portrait',
             icons: [
               {
-                src: 'https://res.cloudinary.com/dohuj4mx9/image/upload/v1778018185/hd_restoration_result_image_6_xejnhg.png',
+                src: '/logo192.png',
                 sizes: '192x192',
-                type: 'image/png'
+                type: 'image/png',
+                purpose: 'any maskable'
               },
               {
-                src: 'https://res.cloudinary.com/dohuj4mx9/image/upload/v1778018185/hd_restoration_result_image_6_xejnhg.png',
+                src: '/logo512.png',
                 sizes: '512x512',
-                type: 'image/png'
+                type: 'image/png',
+                purpose: 'any maskable'
               }
             ]
           },
