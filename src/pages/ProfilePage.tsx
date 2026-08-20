@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, UserCircle, Save, Bell, BellOff } from 'lucide-react';
+import { ArrowLeft, UserCircle, Save, Bell, BellOff, Trash2 } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
 
 const ProfilePage: React.FC = () => {
@@ -17,6 +17,13 @@ const ProfilePage: React.FC = () => {
     updateProfile({ name, email, notificationsEnabled: notifications });
     setSavedMessage('Profile saved successfully!');
     setTimeout(() => setSavedMessage(''), 3000);
+  };
+
+  const handleResetData = () => {
+    if (window.confirm('Are you sure you want to reset the app? This will clear all your saved data and preferences.')) {
+      localStorage.clear();
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -109,6 +116,19 @@ const ProfilePage: React.FC = () => {
                 {savedMessage}
               </p>
             )}
+
+            <div className="mt-8 pt-6 border-t border-zinc-200">
+              <button
+                type="button"
+                onClick={handleResetData}
+                className="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-3.5 rounded-xl active:scale-[0.98] transition-all flex justify-center items-center gap-2"
+              >
+                <Trash2 size={20} /> Reset App Data
+              </button>
+              <p className="text-xs text-zinc-500 text-center mt-3">
+                This will clear all saved preferences and restart the app.
+              </p>
+            </div>
           </div>
         </form>
       </main>

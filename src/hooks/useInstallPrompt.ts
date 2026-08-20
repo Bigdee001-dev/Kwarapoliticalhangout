@@ -13,6 +13,7 @@ export interface BeforeInstallPromptEvent extends Event {
 export function useInstallPrompt() {
   const [promptable, setPromptable] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     // Check if the app is already installed/running in standalone mode
@@ -21,6 +22,11 @@ export function useInstallPrompt() {
       const isStandaloneNavigator = (window.navigator as any).standalone === true;
       setIsStandalone(isStandaloneMedia || isStandaloneNavigator);
     };
+
+    const isIosDevice = 
+      /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(isIosDevice);
 
     checkStandalone();
 
@@ -31,7 +37,6 @@ export function useInstallPrompt() {
 
     const installed = () => {
       setPromptable(null);
-      setIsStandalone(true);
     };
 
     window.addEventListener('beforeinstallprompt', ready);
@@ -45,5 +50,5 @@ export function useInstallPrompt() {
     };
   }, []);
 
-  return { promptable, isStandalone };
+  return { promptable, isStandalone, isIOS };
 }
