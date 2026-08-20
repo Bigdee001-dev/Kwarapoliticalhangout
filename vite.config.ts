@@ -18,12 +18,13 @@ export default defineConfig(({ mode, command }) => {
           registerType: 'autoUpdate',
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
           manifest: {
+            id: '/?source=pwa',
             name: 'KPH News',
             short_name: 'KPH News',
             description: 'The leading platform for breaking news, political analysis, and government reporting in Kwara State.',
             theme_color: '#8B0000',
             background_color: '#F8F9FA',
-            start_url: '/',
+            start_url: '/?source=pwa',
             display: 'standalone',
             orientation: 'portrait',
             icons: [
@@ -40,13 +41,13 @@ export default defineConfig(({ mode, command }) => {
                 purpose: 'any'
               },
               {
-                src: '/logo192.png',
+                src: '/maskable-icon-192.png',
                 sizes: '192x192',
                 type: 'image/png',
                 purpose: 'maskable'
               },
               {
-                src: '/logo512.png',
+                src: '/maskable-icon-512.png',
                 sizes: '512x512',
                 type: 'image/png',
                 purpose: 'maskable'
