@@ -5,12 +5,14 @@ import { NewsService } from '../services/newsService';
 import { Article } from '../types';
 import Logo from '../components/Logo';
 import { motion, AnimatePresence } from 'motion/react';
+import { useProfile } from '../hooks/useProfile';
 
 import ArticleCard from '../components/ArticleCard';
 
 const MobileHome: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const { initial } = useProfile();
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -55,9 +57,9 @@ const MobileHome: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button className="text-zinc-600 p-1"><svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></button>
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-sm shrink-0">
-            A
-          </div>
+          <Link to="/profile" className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-sm shrink-0 hover:bg-slate-300 transition-colors">
+            {initial}
+          </Link>
         </div>
       </header>
 

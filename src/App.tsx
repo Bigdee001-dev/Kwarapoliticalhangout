@@ -18,6 +18,7 @@ import About from './pages/About';
 import SearchResults from './pages/SearchResults';
 import SavedPage from './pages/SavedPage';
 import WriterStudio from './pages/WriterStudio';
+import ProfilePage from './pages/ProfilePage';
 import AdminApp from '../apps/admin/src/App';
 import CookieBanner from './components/CookieBanner';
 import BottomNav from './components/BottomNav';
@@ -57,10 +58,11 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode, isMobilePWA: boolean,
   const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin') || location.pathname.startsWith('/writer-studio');
   const isArticleDetail = location.pathname.startsWith('/article/');
   const isSavedPage = location.pathname.startsWith('/saved');
+  const isProfile = location.pathname === '/profile';
   const isMobileHome = isMobilePWA && location.pathname === '/';
 
-  const hideHeader = isDashboard || isArticleDetail || isMobileHome;
-  const hideFooter = isDashboard || isArticleDetail || isMobileHome || isSavedPage;
+  const hideHeader = isDashboard || isArticleDetail || isMobileHome || isProfile;
+  const hideFooter = isDashboard || isArticleDetail || isMobileHome || isSavedPage || isProfile;
 
   return (
     <div className={`flex flex-col min-h-screen font-sans text-kph-charcoal ${!isDashboard ? 'pb-16 lg:pb-0' : ''}`}>
@@ -71,7 +73,7 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode, isMobilePWA: boolean,
         {children}
       </main>
       {!hideFooter && <Footer />}
-      {!isDashboard && !isArticleDetail && isStandalone && <BottomNav />}
+      {!isDashboard && !isArticleDetail && !isProfile && isStandalone && <BottomNav />}
     </div>
   );
 };
@@ -103,6 +105,7 @@ const AppContent = () => {
           <Route path="/sports" element={<SportsPage />} />
           <Route path="/sports/article/:id" element={<SportsArticleDetail />} />
           <Route path="/saved" element={<SavedPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </LayoutWrapper>
       <CookieBanner />
