@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, User, Clock, ArrowRight, Video, Play, Heart, MessageCircle, Share, MoreHorizontal, Sparkles, Bookmark } from 'lucide-react';
 import { Article } from '../types';
 import { Link } from 'react-router-dom';
+import { NewsService } from '../services/newsService';
+import { toast } from 'sonner';
 
 interface ArticleCardProps {
   article: Article;
@@ -50,10 +52,15 @@ export const ArticleMedia: React.FC<{ article: Article; className: string }> = (
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', delay = 0, darkMode = false }) => {
   const hasVideo = !!article.videoUrl;
   const [isSaved, setIsSaved] = useState(false);
+  const [likes, setLikes] = useState(article.likes || 0);
+  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedArticles') || '[]');
     setIsSaved(saved.some((a: any) => a.id === article.id));
+
+    const likedInSession = sessionStorage.getItem(`liked_${article.id}`);
+    if (likedInSession) setIsLiked(true);
   }, [article.id]);
 
   const toggleSave = (e: React.MouseEvent) => {
@@ -67,6 +74,43 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
     }
     localStorage.setItem('savedArticles', JSON.stringify(saved));
     setIsSaved(!isSaved);
+  };
+
+  const toggleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isLiked) return;
+    
+    setIsLiked(true);
+    setLikes(prev => prev + 1);
+    sessionStorage.setItem(`liked_${article.id}`, 'true');
+
+    try {
+      const newLikes = await NewsService.likeArticle(article.id, likes);
+      setLikes(newLikes);
+    } catch (err) {
+      console.error("Like failed", err);
+    }
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const articleUrl = `${window.location.origin}/article/${article.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: article.excerpt,
+          url: articleUrl,
+        });
+      } catch (err) {
+        console.log('Share canceled');
+      }
+    } else {
+      navigator.clipboard.writeText(articleUrl);
+      toast.success('Link copied to clipboard!');
+    }
   };
 
   if (variant === 'feed') {
@@ -122,14 +166,17 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
         {/* Action Bar */}
         <div className="px-4 py-3 border-t border-zinc-50 flex items-center justify-between mt-auto">
            <div className="flex items-center gap-2">
-             <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
-               <Heart size={18} />
-               <span className="text-[13px] font-bold">2</span>
+             <button 
+               onClick={toggleLike}
+               disabled={isLiked}
+               className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-colors border ${isLiked ? 'bg-red-50 border-red-100 text-kph-red' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100 text-zinc-600'}`}
+             >
+               <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
+               <span className="text-[13px] font-bold">{likes.toLocaleString()}</span>
              </button>
-             <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
+             <Link to={`/article/${article.id}#comments`} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
                <MessageCircle size={18} />
-               <span className="text-[13px] font-bold">1</span>
-             </button>
+             </Link>
            </div>
            
            <div className="flex items-center gap-2">
@@ -139,7 +186,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
              >
                <Bookmark size={18} className={isSaved ? "fill-current" : ""} />
              </button>
-             <button className="p-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100 flex items-center justify-center">
+             <button onClick={handleShare} className="p-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100 flex items-center justify-center">
                <Share size={18} />
              </button>
              <button className="p-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
