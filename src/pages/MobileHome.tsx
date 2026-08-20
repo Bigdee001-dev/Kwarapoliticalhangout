@@ -56,7 +56,6 @@ const MobileHome: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="text-zinc-600 p-1"><svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></button>
           <Link to="/profile" className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-sm shrink-0 hover:bg-slate-300 transition-colors">
             {initial}
           </Link>
@@ -68,9 +67,9 @@ const MobileHome: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-4 px-2">
           <h1 className="text-[22px] font-bold text-zinc-900 tracking-tight">Today's local news</h1>
-          <button className="px-4 py-1.5 rounded-full bg-white border border-zinc-200 text-sm font-bold text-zinc-700 shadow-sm active:scale-95 transition-transform">
+          <Link to="/news" className="px-4 py-1.5 rounded-full bg-white border border-zinc-200 text-sm font-bold text-zinc-700 shadow-sm active:scale-95 transition-transform inline-block">
             See more
-          </button>
+          </Link>
         </div>
 
         {/* Horizontal Feed for Top News */}

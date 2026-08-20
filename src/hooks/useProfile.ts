@@ -18,7 +18,7 @@ const DEFAULT_PROFILE: UserProfile = {
 const PROFILE_STORAGE_KEY = 'kph_user_profile';
 const DEVICE_ID_KEY = 'kph_device_id';
 
-const getDeviceId = () => {
+export const getDeviceId = () => {
   let deviceId = localStorage.getItem(DEVICE_ID_KEY);
   if (!deviceId) {
     deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);

@@ -176,20 +176,55 @@ export const NewsService = {
     }
   },
 
-  async likeArticle(id: string, currentLikes: number = 0): Promise<number> {
+  async checkIfLiked(articleId: string, deviceId: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
-        .from('articles')
-        .update({ likes: currentLikes + 1 })
-        .eq('id', id)
-        .select('likes')
+        .from('article_likes')
+        .select('id')
+        .eq('article_id', articleId)
+        .eq('device_id', deviceId)
         .single();
       
-      if (error) throw error;
-      return data.likes || currentLikes + 1;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking if liked:', error);
+      }
+      return !!data;
     } catch (error) {
-      console.error('Error liking article:', error);
-      return currentLikes;
+      console.error('Error checking if liked:', error);
+      return false;
+    }
+  },
+
+  async toggleLikeArticle(articleId: string, deviceId: string, currentLikes: number = 0): Promise<{ likes: number; isLiked: boolean }> {
+    try {
+      // Check if already liked
+      const isLiked = await this.checkIfLiked(articleId, deviceId);
+
+      if (isLiked) {
+        // Unlike
+        await supabase
+          .from('article_likes')
+          .delete()
+          .eq('article_id', articleId)
+          .eq('device_id', deviceId);
+
+        const newLikes = Math.max(0, currentLikes - 1);
+        await supabase.from('articles').update({ likes: newLikes }).eq('id', articleId);
+        return { likes: newLikes, isLiked: false };
+      } else {
+        // Like
+        await supabase
+          .from('article_likes')
+          .insert({ article_id: articleId, device_id: deviceId });
+
+        const newLikes = currentLikes + 1;
+        await supabase.from('articles').update({ likes: newLikes }).eq('id', articleId);
+        return { likes: newLikes, isLiked: true };
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Return previous state on error
+      return { likes: currentLikes, isLiked: false };
     }
   },
 

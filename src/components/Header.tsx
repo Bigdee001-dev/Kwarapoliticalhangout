@@ -151,13 +151,15 @@ const Header: React.FC = () => {
                 >
                   <Search size={24} strokeWidth={2.5} />
               </button>
-              <button 
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="text-kph-charcoal hover:text-kph-red p-2 transition-colors"
-                aria-label="Open menu"
-              >
-                <Menu size={28} />
-              </button>
+              {!isStandalone && (
+                <button 
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="text-kph-charcoal hover:text-kph-red p-2 transition-colors"
+                  aria-label="Open menu"
+                >
+                  <Menu size={28} />
+                </button>
+              )}
             </div>
           </div>
         </div>

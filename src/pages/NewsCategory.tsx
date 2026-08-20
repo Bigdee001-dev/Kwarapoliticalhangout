@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertTriangle, RefreshCw, ChevronRight } from 'lucide-react';
 import ArticleCard from '../components/ArticleCard';
@@ -120,7 +121,7 @@ const NewsCategory: React.FC<NewsCategoryProps> = ({ title, topic, description }
             {/* Featured in Category */}
             {featured && (
               <div className="bg-white p-5 lg:p-6 rounded-2xl shadow-lg border border-gray-100 animate-slide-up">
-                <div className="relative h-64 lg:h-80 rounded-xl overflow-hidden mb-5 group cursor-pointer">
+                <Link to={`/article/${featured.id}`} className="block relative h-64 lg:h-80 rounded-xl overflow-hidden mb-5 group cursor-pointer">
                   <img
                     src={featured.imageUrl}
                     alt={featured.title}
@@ -131,16 +132,16 @@ const NewsCategory: React.FC<NewsCategoryProps> = ({ title, topic, description }
                     <span className="bg-kph-red px-2 py-0.5 text-[10px] font-bold uppercase rounded mb-2 inline-block">Top Story</span>
                     <h2 className="text-xl lg:text-2xl font-bold leading-tight group-hover:underline decoration-kph-red decoration-2 underline-offset-4">{featured.title}</h2>
                   </div>
-                </div>
+                </Link>
                 <p className="text-gray-600 text-base mb-5 leading-relaxed">{featured.excerpt}</p>
                 <div className="flex items-center justify-between border-t border-gray-100 pt-5">
                   <div className="flex items-center space-x-3 text-xs text-gray-400">
                     <span className="font-bold text-kph-charcoal">{featured.author}</span>
                     <span>{featured.date}</span>
                   </div>
-                  <a href={`#/article/${featured.id}`} className="text-kph-red text-sm font-bold flex items-center hover:text-red-900 transition-colors">
+                  <Link to={`/article/${featured.id}`} className="text-kph-red text-sm font-bold flex items-center hover:text-red-900 transition-colors">
                     Read Full Story <ChevronRight size={14} className="ml-1" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             )}

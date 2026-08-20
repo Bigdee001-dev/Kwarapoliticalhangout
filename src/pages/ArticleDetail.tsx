@@ -17,6 +17,7 @@ import PopupAdModal from '../components/PopupAdModal';
 import { Article, Comment } from '../types';
 import SEO from '../components/SEO';
 import { toast } from 'sonner';
+import { getDeviceId } from '../hooks/useProfile';
 
 const ArticleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +29,7 @@ const ArticleDetail: React.FC = () => {
 
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   const [commentText, setCommentText] = useState('');
   const [commentName, setCommentName] = useState(localStorage.getItem('kph_commenter_name') || '');
@@ -56,9 +58,10 @@ const ArticleDetail: React.FC = () => {
           setArticle(found);
           setLikes(found.likes || 0);
 
-          // Check if liked in this session
-          const likedInSession = sessionStorage.getItem(`liked_${id}`);
-          if (likedInSession) setIsLiked(true);
+          // Check if liked using Supabase
+          const deviceId = getDeviceId();
+          const liked = await NewsService.checkIfLiked(id, deviceId);
+          setIsLiked(liked);
 
           // Load comments
           const articleComments = await NewsService.getComments(id);
@@ -81,17 +84,25 @@ const ArticleDetail: React.FC = () => {
 
 
   const toggleLike = async () => {
-    if (isLiked || !article) return;
+    if (isLiking || !article) return;
 
-    setIsLiked(true);
-    setLikes(prev => prev + 1);
-    sessionStorage.setItem(`liked_${article.id}`, 'true');
+    setIsLiking(true);
+    // Optimistic UI update
+    setIsLiked(!isLiked);
+    setLikes(prev => isLiked ? Math.max(0, prev - 1) : prev + 1);
 
     try {
-      const newLikes = await NewsService.likeArticle(article.id, likes);
-      setLikes(newLikes);
+      const deviceId = getDeviceId();
+      const result = await NewsService.toggleLikeArticle(article.id, deviceId, likes);
+      setLikes(result.likes);
+      setIsLiked(result.isLiked);
     } catch (err) {
       console.error("Like failed", err);
+      // Revert optimistic update
+      setIsLiked(isLiked);
+      setLikes(likes);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -367,7 +378,7 @@ const ArticleDetail: React.FC = () => {
           <div className="flex items-center gap-6 sm:gap-8">
             <button
               onClick={toggleLike}
-              disabled={isLiked}
+              disabled={isLiking}
               className={`flex items-center gap-3 transition-all transform active:scale-95 ${isLiked ? 'text-kph-red' : 'text-zinc-400 hover:text-zinc-900'}`}
             >
               <div className={`w-10 h-10 sm:w-11 h-11 rounded-xl flex items-center justify-center border transition-all ${isLiked ? 'bg-kph-red border-kph-red text-white shadow-lg' : 'border-zinc-200 bg-white hover:border-zinc-300'}`}>
@@ -515,32 +526,14 @@ const ArticleDetail: React.FC = () => {
   </div>
 
       {/* Sticky Actions Bar (Mobile) / Floating Actions (Desktop) */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-between px-4 py-3 bg-white/95 backdrop-blur-xl border-t border-zinc-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe lg:bottom-8 lg:right-8 lg:left-auto lg:w-auto lg:flex-col lg:gap-3 lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none select-none">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-center px-4 py-3 bg-white/95 backdrop-blur-xl border-t border-zinc-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe lg:bottom-8 lg:right-8 lg:left-auto lg:w-auto lg:flex-col lg:gap-3 lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none select-none">
         
-        {/* Fake Comment Input for Mobile */}
-        <div 
-          className="lg:hidden flex-grow mr-2"
-          onClick={() => {
-            const commentsSection = document.getElementById('comments');
-            if (commentsSection) {
-              commentsSection.scrollIntoView({ behavior: 'smooth' });
-              setTimeout(() => {
-                document.getElementById('comment-textarea')?.focus();
-              }, 600);
-            }
-          }}
-        >
-          <div className="bg-zinc-100 rounded-full py-2.5 px-4 text-sm text-zinc-500 font-medium flex items-center cursor-pointer active:scale-[0.98] transition-transform">
-            Write a comment...
-          </div>
-        </div>
-
-        <div className="flex lg:flex-col gap-2 lg:gap-3 items-center">
+        <div className="flex lg:flex-col gap-6 lg:gap-3 items-center">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleLike}
-            disabled={isLiked}
+            disabled={isLiking}
             className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full lg:shadow-lg flex items-center justify-center transition-all ${isLiked ? 'bg-transparent text-kph-red lg:bg-kph-red lg:text-white' : 'bg-transparent lg:bg-white text-zinc-600 lg:text-zinc-400 lg:border lg:border-zinc-100 hover:text-zinc-900'}`}
           >
             <Heart size={22} fill={isLiked ? 'currentColor' : 'none'} />

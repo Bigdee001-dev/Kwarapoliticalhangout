@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import { NewsService } from '../services/newsService';
 import { toast } from 'sonner';
 
+import { getDeviceId } from '../hooks/useProfile';
+
 interface ArticleCardProps {
   article: Article;
   variant?: 'grid' | 'list' | 'compact' | 'feed';
@@ -54,13 +56,18 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
   const [isSaved, setIsSaved] = useState(false);
   const [likes, setLikes] = useState(article.likes || 0);
   const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedArticles') || '[]');
     setIsSaved(saved.some((a: any) => a.id === article.id));
 
-    const likedInSession = sessionStorage.getItem(`liked_${article.id}`);
-    if (likedInSession) setIsLiked(true);
+    const checkLikedStatus = async () => {
+      const deviceId = getDeviceId();
+      const liked = await NewsService.checkIfLiked(article.id, deviceId);
+      setIsLiked(liked);
+    };
+    checkLikedStatus();
   }, [article.id]);
 
   const toggleSave = (e: React.MouseEvent) => {
@@ -79,17 +86,25 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
   const toggleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isLiked) return;
+    if (isLiking) return;
     
-    setIsLiked(true);
-    setLikes(prev => prev + 1);
-    sessionStorage.setItem(`liked_${article.id}`, 'true');
+    setIsLiking(true);
+    // Optimistic UI update
+    setIsLiked(!isLiked);
+    setLikes(prev => isLiked ? Math.max(0, prev - 1) : prev + 1);
 
     try {
-      const newLikes = await NewsService.likeArticle(article.id, likes);
-      setLikes(newLikes);
+      const deviceId = getDeviceId();
+      const result = await NewsService.toggleLikeArticle(article.id, deviceId, likes);
+      setLikes(result.likes);
+      setIsLiked(result.isLiked);
     } catch (err) {
       console.error("Like failed", err);
+      // Revert optimistic update
+      setIsLiked(isLiked);
+      setLikes(likes);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -134,9 +149,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
               </span>
             </div>
           </div>
-          <button className="text-zinc-400 p-2 hover:bg-zinc-50 rounded-full">
-            <MoreHorizontal size={20} />
-          </button>
         </div>
 
         {/* Title */}
@@ -168,7 +180,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
            <div className="flex items-center gap-2">
              <button 
                onClick={toggleLike}
-               disabled={isLiked}
+               disabled={isLiking}
                className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-colors border ${isLiked ? 'bg-red-50 border-red-100 text-kph-red' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100 text-zinc-600'}`}
              >
                <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
@@ -188,9 +200,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
              </button>
              <button onClick={handleShare} className="p-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100 flex items-center justify-center">
                <Share size={18} />
-             </button>
-             <button className="p-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
-               <MoreHorizontal size={18} />
              </button>
            </div>
         </div>
