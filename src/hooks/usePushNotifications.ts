@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // Helper function to convert VAPID key to Uint8Array
 const urlBase64ToUint8Array = (base64String: string) => {
