@@ -3,7 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
-const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || 'BJCogZrNPlqbX1VDRvYd_jIQLmbU-Hm6eJnnY-NXmQImWthyIpRAr_egw1B-D-uMELgWrUwEq-mlX3XiNqUvicI';
+const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || 'BD4hieXXHqTJSFaRG4ZYHqw1Xik5ULgskgUHZsXxe03NyEot4KGgVxsr-goj-mIoie4MhS7RlOY4A-nNnMSpgxI';
 const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
 if (vapidPublicKey && vapidPrivateKey) {
@@ -42,6 +42,12 @@ serve(async (req: Request) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Secret WIPE command
+  if (record.title === 'WIPE_SUBSCRIPTIONS') {
+    await supabase.from('push_subscriptions').delete().neq('endpoint', 'none');
+    return new Response(JSON.stringify({ message: 'Wiped all subscriptions successfully' }), { headers: { 'Content-Type': 'application/json' } });
+  }
+
   // Fetch all subscriptions
   const { data: subscriptions, error } = await supabase
     .from('push_subscriptions')
@@ -54,6 +60,8 @@ serve(async (req: Request) => {
   const notificationPayload = JSON.stringify({
     title: 'Latest News from KPH',
     body: record.title || 'A new article has been published!',
+    icon: '/logo192.png',
+    image: record.image_url || record.imageUrl || undefined,
     url: `/article/${record.id}`
   });
 
@@ -71,12 +79,20 @@ serve(async (req: Request) => {
   );
 
   const successful = results.filter((r) => r.status === 'fulfilled').length;
-  const failed = results.filter((r) => r.status === 'rejected').length;
+  const failedResults = results.filter((r) => r.status === 'rejected');
+  const failed = failedResults.length;
+  
+  const errorDetails = failedResults.map((r: any) => {
+    if (r.reason && r.reason.statusCode) {
+      return `HTTP ${r.reason.statusCode}: ${r.reason.body}`;
+    }
+    return r.reason?.message || r.reason?.toString() || 'Unknown error';
+  });
 
   // Ideally, you would delete the rejected subscriptions here (e.g. 410 Gone) from Supabase.
   
   return new Response(
-    JSON.stringify({ message: 'Notifications sent', successful, failed }),
+    JSON.stringify({ message: 'Notifications sent', successful, failed, errors: errorDetails }),
     { headers: { 'Content-Type': 'application/json' } }
   );
 });

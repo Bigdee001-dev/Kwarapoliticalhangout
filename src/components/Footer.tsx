@@ -4,6 +4,7 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Youtube, Shield, Inst
 import { NAV_ITEMS } from '../data';
 import Logo from './Logo';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
+import { PushNotificationToggle } from './PushNotificationToggle';
 
 const Footer: React.FC = () => {
   const { promptable, isStandalone } = useInstallPrompt();
@@ -53,12 +54,16 @@ const Footer: React.FC = () => {
               {!isStandalone && (
                 <button 
                   onClick={handleInstallClick}
-                  className="flex items-center gap-2 bg-kph-red/20 hover:bg-kph-red text-white px-4 py-2.5 rounded-lg transition-all border border-kph-red/50 text-sm font-bold w-full sm:w-auto justify-center shadow-lg active:scale-95"
+                  className="flex items-center gap-2 bg-kph-red/20 hover:bg-kph-red text-white px-4 py-2.5 rounded-lg transition-all border border-kph-red/50 text-sm font-bold w-full sm:w-auto justify-center shadow-lg active:scale-95 mb-3"
                 >
                   <Smartphone size={16} />
                   Install Mobile App
                 </button>
               )}
+              
+              <div className="w-full sm:w-auto flex">
+                <PushNotificationToggle />
+              </div>
             </div>
 
           {/* Contact */}

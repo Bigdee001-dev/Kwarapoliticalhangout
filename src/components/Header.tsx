@@ -4,7 +4,6 @@ import { Menu, X, Search, Facebook, Twitter, Instagram, Linkedin, UserCircle, Ar
 import { NAV_ITEMS } from '../data';
 import Logo from './Logo';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
-import { PushNotificationToggle } from './PushNotificationToggle';
 
 const Header: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -139,7 +138,6 @@ const Header: React.FC = () => {
                >
                   <Search size={20} strokeWidth={2.5} />
                </button>
-               <PushNotificationToggle />
                <button className="bg-kph-red text-white text-xs font-bold px-4 py-2 rounded shadow hover:bg-red-900 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
                   SUBSCRIBE
                </button>
@@ -201,9 +199,6 @@ const Header: React.FC = () => {
               <span>{item.label}</span>
             </Link>
           ))}
-          <div className="pt-4 border-t border-gray-100 w-full flex justify-center">
-             <PushNotificationToggle className="w-full text-lg py-4" />
-          </div>
         </div>
       </div>
 

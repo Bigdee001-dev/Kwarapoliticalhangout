@@ -40,10 +40,7 @@ export const NewsService = {
     try {
       let query = supabase
         .from('articles')
-        .select(`
-          *,
-          profiles:author_id(name)
-        `)
+        .select(`id, title, excerpt, category, author_name, date, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
         .eq('status', 'published')
         .order('date', { ascending: false })
         .limit(50);
@@ -52,22 +49,27 @@ export const NewsService = {
         query = query.eq('category', topic);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-
-      const articles = data.map((d: any) => {
-        const art = mapArticleData(d);
-        articleDetailCache.set(art.id, art);
-        return art;
-      });
-
+      let guardianPromise = Promise.resolve<Article[]>([]);
       if (topic === 'General') {
-        // Fetch standard world/general news from Guardian to feature on home screen
-        const globalNews = await this.fetchGuardianNews('');
-        articles.push(...globalNews);
+        guardianPromise = this.fetchGuardianNews('');
       } else if (topic === 'Nigeria') {
-        const naijaNews = await this.fetchGuardianNews('nigeria');
-        articles.push(...naijaNews);
+        guardianPromise = this.fetchGuardianNews('nigeria');
+      }
+
+      const [supabaseResult, guardianResult] = await Promise.allSettled([query, guardianPromise]);
+
+      const articles: Article[] = [];
+
+      if (supabaseResult.status === 'fulfilled' && !supabaseResult.value.error && supabaseResult.value.data) {
+        supabaseResult.value.data.forEach((d: any) => {
+          const art = mapArticleData(d);
+          articleDetailCache.set(art.id, art);
+          articles.push(art);
+        });
+      }
+
+      if (guardianResult.status === 'fulfilled') {
+        articles.push(...guardianResult.value);
       }
 
       newsCache[cacheKey] = { timestamp: Date.now(), data: articles };
@@ -80,11 +82,15 @@ export const NewsService = {
 
   async fetchGuardianNews(query: string, section?: string): Promise<Article[]> {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout
+
       let url = `https://content.guardianapis.com/search?api-key=ec05b8cc-27af-4bed-910e-0199cd646792&show-fields=headline,thumbnail,trailText,body,byline,firstPublicationDate,shortUrl&order-by=newest`;
       if (query) url += `&q=${encodeURIComponent(query)}`;
       if (section) url += `&section=${section}`;
       
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await response.json();
       
       if (data.response?.status !== 'ok') {
@@ -127,10 +133,15 @@ export const NewsService = {
     }
 
     try {
-      const naijaSports = await this.fetchGuardianNews('nigeria', 'sport');
-      const globalSports = await this.fetchGuardianNews('', 'sport');
+      const [naijaSportsResult, globalSportsResult] = await Promise.allSettled([
+        this.fetchGuardianNews('nigeria', 'sport'),
+        this.fetchGuardianNews('', 'sport')
+      ]);
       
-      const combined = [...naijaSports, ...globalSports];
+      let combined: Article[] = [];
+      if (naijaSportsResult.status === 'fulfilled') combined.push(...naijaSportsResult.value);
+      if (globalSportsResult.status === 'fulfilled') combined.push(...globalSportsResult.value);
+      
       const uniqueIds = new Set();
       const articles = combined.filter(a => {
         if (uniqueIds.has(a.id)) return false;
@@ -149,7 +160,10 @@ export const NewsService = {
   async getArticleById(id: string): Promise<Article | undefined> {
     // Check local cache first (crucial for sports API articles)
     if (articleDetailCache.has(id)) {
-      return articleDetailCache.get(id);
+      const cached = articleDetailCache.get(id);
+      if (cached && cached.content !== undefined) {
+        return cached;
+      }
     }
     
     // Fallback to Supabase for native articles
@@ -268,7 +282,7 @@ export const NewsService = {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select(`*, profiles:author_id(name)`)
+        .select(`id, title, excerpt, category, author_name, date, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
         .eq('status', 'published')
         .or(`title.ilike.%${queryStr}%,excerpt.ilike.%${queryStr}%`)
         .order('date', { ascending: false })

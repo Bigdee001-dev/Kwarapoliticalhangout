@@ -26,6 +26,7 @@ import BottomNav from './components/BottomNav';
 import OfflineBanner from './components/OfflineBanner';
 import InstallPrompt from './components/InstallPrompt';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
+import NotificationPrompt from './components/NotificationPrompt';
 
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = React.useState(false);
@@ -75,6 +76,7 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode, isMobilePWA: boolean,
       </main>
       {!hideFooter && <Footer />}
       {!isDashboard && !isArticleDetail && !isProfile && isStandalone && <BottomNav />}
+      <NotificationPrompt />
     </div>
   );
 };
