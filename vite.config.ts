@@ -57,6 +57,7 @@ export default defineConfig(({ mode, command }) => {
             ]
           },
           workbox: {
+            importScripts: ['/push-sw.js'],
             globPatterns: command === 'serve' ? [] : ['**/*.{js,css,html,ico,png,svg}'],
             runtimeCaching: [
               {
