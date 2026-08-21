@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 
 import Home from './pages/Home';
 import MobileHome from './pages/MobileHome';
+import { Toaster } from 'sonner';
 import People from './pages/People';
 import ArticleDetail from './pages/ArticleDetail';
 import Contact from './pages/Contact';
@@ -87,6 +88,7 @@ const AppContent = () => {
   
   return (
     <Router>
+      <Toaster position="top-center" richColors />
       <ScrollToTopWrapper />
       <LayoutWrapper isMobilePWA={isMobilePWA} isStandalone={isStandalone}>
         <Routes>

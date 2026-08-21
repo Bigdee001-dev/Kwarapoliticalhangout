@@ -201,6 +201,9 @@ const Header: React.FC = () => {
               <span>{item.label}</span>
             </Link>
           ))}
+          <div className="pt-4 border-t border-gray-100 w-full flex justify-center">
+             <PushNotificationToggle className="w-full text-lg py-4" />
+          </div>
         </div>
       </div>
 

@@ -1,13 +1,14 @@
+// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
-const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || 'BGh9BIgQd-qyqihrVmhQCY49A0kVZxh-D_qQzz76k_tMCqF9N8UsBheq3EJ_9yVQ3pr3IXRrt3--FyVTBI5C6cY';
+const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || 'BGHOjr5JR4YA3uKvS1kj0G84dM_JcoYzYJb4aGIs_blqLhI_O4aST-ToiG-_kqD5u7JS0d5B16KrAB84RWucBA8';
 const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(
-    'mailto:admin@kphnews.com',
+    'mailto:abdulrahmanadebambo@gmail.com',
     vapidPublicKey,
     vapidPrivateKey
   );

@@ -21,9 +21,9 @@ export const PushNotificationToggle: React.FC<{ className?: string }> = ({ class
     <button
       onClick={handleToggle}
       disabled={isLoading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 font-medium ${
+      className={`flex items-center justify-center gap-2 px-4 py-2 rounded-full transition-all duration-300 font-bold ${
         isSubscribed 
-          ? 'bg-kph-red/10 text-kph-red hover:bg-kph-red/20' 
+          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 shadow-sm' 
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
       } ${className}`}
       aria-label={isSubscribed ? "Disable Push Notifications" : "Enable Push Notifications"}
@@ -31,13 +31,14 @@ export const PushNotificationToggle: React.FC<{ className?: string }> = ({ class
       {isLoading ? (
         <Loader2 size={18} className="animate-spin" />
       ) : isSubscribed ? (
-        <Bell size={18} />
+        <Bell size={18} className="animate-[wiggle_1s_ease-in-out_infinite]" />
       ) : (
         <BellOff size={18} />
       )}
       <span className="text-sm">
-        {isSubscribed ? 'Notifications On' : 'Get Alerts'}
+        {isSubscribed ? 'Alerts On' : 'Get Alerts'}
       </span>
+      {/* We need to define wiggle keyframes if not defined in tailwind, but tw-animate-css might have ring or wiggle */}
     </button>
   );
 };

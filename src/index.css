@@ -583,3 +583,8 @@
   backdrop-filter: blur(4px);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
