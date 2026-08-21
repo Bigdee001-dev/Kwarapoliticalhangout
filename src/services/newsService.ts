@@ -10,6 +10,37 @@ interface CacheEntry {
 const newsCache: Record<string, CacheEntry> = {};
 const articleDetailCache: Map<string, Article> = new Map();
 
+const LOCAL_STORAGE_KEY = 'kph_news_cache_v2';
+
+// Load from localStorage on initialization
+try {
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (parsed.newsCache) {
+      Object.assign(newsCache, parsed.newsCache);
+    }
+    if (parsed.articleDetailCache) {
+      parsed.articleDetailCache.forEach(([k, v]: any) => articleDetailCache.set(k, v));
+    }
+  }
+} catch (e) {
+  console.warn("Failed to parse localStorage cache", e);
+}
+
+const persistCache = () => {
+  try {
+    const serialized = {
+      newsCache,
+      // Only store up to 50 articles in detail cache to avoid quota limits
+      articleDetailCache: Array.from(articleDetailCache.entries()).slice(0, 50)
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(serialized));
+  } catch (e) {
+    console.warn("Failed to save to localStorage", e);
+  }
+};
+
 const mapArticleData = (d: any): Article => ({
   id: d.id,
   title: d.title,
@@ -30,54 +61,69 @@ const mapArticleData = (d: any): Article => ({
 });
 
 export const NewsService = {
-  async getLatestNews(topic: string = 'General'): Promise<Article[]> {
+  async getLatestNews(topic: string = 'General', onUpdate?: (articles: Article[]) => void): Promise<Article[]> {
     const cacheKey = `latest_${topic}`;
     const cached = newsCache[cacheKey];
-    if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
-      return cached.data;
+    const isFresh = cached && (Date.now() - cached.timestamp < CACHE_DURATION);
+
+    const fetchFresh = async () => {
+      try {
+        let query = supabase
+          .from('articles')
+          .select(`id, title, excerpt, content, category, author_name, date, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
+          .eq('status', 'published')
+          .order('date', { ascending: false })
+          .limit(50);
+
+        if (topic !== 'General') {
+          query = query.eq('category', topic);
+        }
+
+        let guardianPromise = Promise.resolve<Article[]>([]);
+        if (topic === 'General') {
+          guardianPromise = this.fetchGuardianNews('');
+        } else if (topic === 'Nigeria') {
+          guardianPromise = this.fetchGuardianNews('nigeria');
+        }
+
+        const [supabaseResult, guardianResult] = await Promise.allSettled([query, guardianPromise]);
+
+        const articles: Article[] = [];
+
+        if (supabaseResult.status === 'fulfilled' && !supabaseResult.value.error && supabaseResult.value.data) {
+          supabaseResult.value.data.forEach((d: any) => {
+            const art = mapArticleData(d);
+            // We don't overwrite full content in articleDetailCache if we already have it
+            if (!articleDetailCache.has(art.id) || !articleDetailCache.get(art.id)?.content) {
+              articleDetailCache.set(art.id, art);
+            }
+            articles.push(art);
+          });
+        }
+
+        if (guardianResult.status === 'fulfilled') {
+          articles.push(...guardianResult.value);
+        }
+
+        newsCache[cacheKey] = { timestamp: Date.now(), data: articles };
+        persistCache();
+        
+        if (onUpdate) onUpdate(articles);
+        return articles;
+      } catch (error) {
+        console.error('Error fetching articles:', error);
+        return cached ? cached.data : [];
+      }
+    };
+
+    if (cached) {
+      if (!isFresh) {
+        fetchFresh(); // Revalidate in background
+      }
+      return cached.data; // Return instantly
     }
 
-    try {
-      let query = supabase
-        .from('articles')
-        .select(`id, title, excerpt, category, author_name, date, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
-        .eq('status', 'published')
-        .order('date', { ascending: false })
-        .limit(50);
-
-      if (topic !== 'General') {
-        query = query.eq('category', topic);
-      }
-
-      let guardianPromise = Promise.resolve<Article[]>([]);
-      if (topic === 'General') {
-        guardianPromise = this.fetchGuardianNews('');
-      } else if (topic === 'Nigeria') {
-        guardianPromise = this.fetchGuardianNews('nigeria');
-      }
-
-      const [supabaseResult, guardianResult] = await Promise.allSettled([query, guardianPromise]);
-
-      const articles: Article[] = [];
-
-      if (supabaseResult.status === 'fulfilled' && !supabaseResult.value.error && supabaseResult.value.data) {
-        supabaseResult.value.data.forEach((d: any) => {
-          const art = mapArticleData(d);
-          articleDetailCache.set(art.id, art);
-          articles.push(art);
-        });
-      }
-
-      if (guardianResult.status === 'fulfilled') {
-        articles.push(...guardianResult.value);
-      }
-
-      newsCache[cacheKey] = { timestamp: Date.now(), data: articles };
-      return articles;
-    } catch (error) {
-      console.error('Error fetching articles:', error);
-      return [];
-    }
+    return await fetchFresh();
   },
 
   async fetchGuardianNews(query: string, section?: string): Promise<Article[]> {
@@ -125,69 +171,89 @@ export const NewsService = {
     }
   },
 
-  async fetchLiveSportsNews(): Promise<Article[]> {
+  async fetchLiveSportsNews(onUpdate?: (articles: Article[]) => void): Promise<Article[]> {
     const cacheKey = `latest_sports_api`;
     const cached = newsCache[cacheKey];
-    if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+    const isFresh = cached && (Date.now() - cached.timestamp < CACHE_DURATION);
+
+    const fetchFresh = async () => {
+      try {
+        const [naijaSportsResult, globalSportsResult] = await Promise.allSettled([
+          this.fetchGuardianNews('nigeria', 'sport'),
+          this.fetchGuardianNews('', 'sport')
+        ]);
+        
+        let combined: Article[] = [];
+        if (naijaSportsResult.status === 'fulfilled') combined.push(...naijaSportsResult.value);
+        if (globalSportsResult.status === 'fulfilled') combined.push(...globalSportsResult.value);
+        
+        const uniqueIds = new Set();
+        const articles = combined.filter(a => {
+          if (uniqueIds.has(a.id)) return false;
+          uniqueIds.add(a.id);
+          return true;
+        });
+
+        newsCache[cacheKey] = { timestamp: Date.now(), data: articles };
+        persistCache();
+        if (onUpdate) onUpdate(articles);
+        return articles;
+      } catch (error) {
+        console.error('Error fetching live sports:', error);
+        return cached ? cached.data : [];
+      }
+    };
+
+    if (cached) {
+      if (!isFresh) fetchFresh();
       return cached.data;
     }
 
-    try {
-      const [naijaSportsResult, globalSportsResult] = await Promise.allSettled([
-        this.fetchGuardianNews('nigeria', 'sport'),
-        this.fetchGuardianNews('', 'sport')
-      ]);
-      
-      let combined: Article[] = [];
-      if (naijaSportsResult.status === 'fulfilled') combined.push(...naijaSportsResult.value);
-      if (globalSportsResult.status === 'fulfilled') combined.push(...globalSportsResult.value);
-      
-      const uniqueIds = new Set();
-      const articles = combined.filter(a => {
-        if (uniqueIds.has(a.id)) return false;
-        uniqueIds.add(a.id);
-        return true;
-      });
-
-      newsCache[cacheKey] = { timestamp: Date.now(), data: articles };
-      return articles;
-    } catch (error) {
-      console.error('Error fetching live sports:', error);
-      return [];
-    }
+    return await fetchFresh();
   },
 
-  async getArticleById(id: string): Promise<Article | undefined> {
-    // Check local cache first (crucial for sports API articles)
-    if (articleDetailCache.has(id)) {
-      const cached = articleDetailCache.get(id);
-      if (cached && cached.content !== undefined) {
+  async getArticleById(id: string, onUpdate?: (article: Article) => void): Promise<Article | undefined> {
+    const cached = articleDetailCache.get(id);
+    const hasFullContent = cached && cached.content !== undefined;
+
+    const fetchFresh = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .select(`*, profiles:author_id(name)`)
+          .eq('id', id)
+          .single();
+          
+        if (error) throw error;
+        if (data) {
+          // Fire-and-forget view increment
+          (async () => {
+            try {
+              await supabase.from('articles').update({ views: (data.views || 0) + 1 }).eq('id', id);
+            } catch (e) {
+              // Ignore errors
+            }
+          })();
+          
+          const art = mapArticleData(data);
+          articleDetailCache.set(id, art);
+          persistCache();
+          if (onUpdate) onUpdate(art);
+          return art;
+        }
+        return undefined;
+      } catch (error) {
+        console.error('Error fetching article by id:', error);
         return cached;
       }
+    };
+
+    if (hasFullContent) {
+      fetchFresh(); // Revalidate silently
+      return cached;
     }
     
-    // Fallback to Supabase for native articles
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select(`*, profiles:author_id(name)`)
-        .eq('id', id)
-        .single();
-        
-      if (error) throw error;
-      if (data) {
-        // Increment views
-        await supabase.from('articles').update({ views: (data.views || 0) + 1 }).eq('id', id);
-        
-        const art = mapArticleData(data);
-        articleDetailCache.set(id, art);
-        return art;
-      }
-      return undefined;
-    } catch (error) {
-      console.error('Error fetching article by id:', error);
-      return undefined;
-    }
+    return await fetchFresh();
   },
 
   async checkIfLiked(articleId: string, deviceId: string): Promise<boolean> {

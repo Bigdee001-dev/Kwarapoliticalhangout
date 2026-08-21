@@ -70,6 +70,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
     checkLikedStatus();
   }, [article.id]);
 
+  const handlePrefetch = () => {
+    // Prefetch article in the background so it loads instantly on click
+    NewsService.getArticleById(article.id).catch(() => {});
+  };
+
   const toggleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -131,6 +136,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
   if (variant === 'feed') {
     return (
       <div 
+        onMouseEnter={handlePrefetch}
+        onTouchStart={handlePrefetch}
         className={`flex-1 flex flex-col bg-white rounded-3xl shadow-sm hover:shadow-xl transition-shadow duration-300 border border-zinc-100 overflow-hidden w-full max-w-full h-full`}
       >
         {/* Top Header */}
@@ -210,6 +217,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
   if (variant === 'list') {
     return (
       <div
+        onMouseEnter={handlePrefetch}
+        onTouchStart={handlePrefetch}
         className={`flex flex-col sm:flex-row gap-4 border rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group animate-slide-up w-full max-w-full ${darkMode
           ? 'bg-gray-800 border-gray-700'
           : 'bg-white border-zinc-100'
@@ -264,7 +273,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
 
   if (variant === 'compact') {
     return (
-      <div className={`flex space-x-3 items-start py-2.5 border-b last:border-0 group transition-colors duration-200 w-full max-w-full ${darkMode
+      <div 
+        onMouseEnter={handlePrefetch}
+        onTouchStart={handlePrefetch}
+        className={`flex space-x-3 items-start py-2.5 border-b last:border-0 group transition-colors duration-200 w-full max-w-full ${darkMode
         ? 'border-gray-700 hover:bg-white/5'
         : 'border-zinc-50 hover:bg-zinc-50'
         }`}>
@@ -296,6 +308,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
   // Default Grid Variant
   return (
     <div
+      onMouseEnter={handlePrefetch}
+      onTouchStart={handlePrefetch}
       className={`border rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 group h-full flex flex-col hover:-translate-y-1 animate-slide-up w-full max-w-full ${darkMode
         ? 'bg-gray-800 border-gray-700 hover:shadow-black/50'
         : 'bg-white border-zinc-100 hover:shadow-red-50/20'

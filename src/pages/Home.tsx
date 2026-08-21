@@ -162,53 +162,64 @@ const HeroSection: React.FC<HeroSectionProps> = ({ featuredArticle, subFeaturedA
 
 const Home: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [globalAlert, setGlobalAlert] = useState<GlobalAlert | null>(null);
   const [adConfig, setAdConfig] = useState<AdConfig | null>(null);
+  const featuredIdsRef = useRef<string[]>([]);
+
+  const processedNewsWithFeatured = (news: Article[], featuredIds: string[]) => {
+    const processed = [...news];
+    if (featuredIds.length > 0) {
+      const topFeatureId = featuredIds[0];
+      const featureIdx = processed.findIndex(a => a.id === topFeatureId);
+      if (featureIdx > 0) {
+        const item = processed.splice(featureIdx, 1)[0];
+        processed.unshift(item);
+      }
+    }
+    return processed;
+  };
 
   const fetchContent = async () => {
-    setLoading(true);
     try {
-      const [alertConfig, ads, featuredIds, newsData] = await Promise.all([
+      // 1. Instantly get news (from cache if available) and setup SWR background update
+      const initialNews = await NewsService.getLatestNews('General', (updatedNews) => {
+        setArticles(processedNewsWithFeatured(updatedNews, featuredIdsRef.current));
+      });
+
+      setArticles(processedNewsWithFeatured(initialNews, featuredIdsRef.current));
+      setError(null);
+      setIsInitialLoad(false);
+
+      // 2. Fetch admin configs in background without blocking news render
+      Promise.all([
         AdminService.getGlobalAlert(),
         AdminService.getAdConfig(),
-        AdminService.getFeaturedArticleIds(),
-        NewsService.getLatestNews('General')
-      ]);
+        AdminService.getFeaturedArticleIds()
+      ]).then(([alertConfig, ads, featuredIds]) => {
+        if (alertConfig && alertConfig.enabled) setGlobalAlert(alertConfig);
+        setAdConfig(ads);
+        featuredIdsRef.current = featuredIds;
 
-      if (alertConfig && alertConfig.enabled) setGlobalAlert(alertConfig);
-      setAdConfig(ads);
+        // Re-sort current articles if featured IDs changed
+        setArticles(prev => processedNewsWithFeatured(prev, featuredIds));
 
-      // Record impression if home banner is active
-      if (ads.homeBanner.enabled && ads.homeBanner.imageUrl) {
-        AdminService.recordAdImpression('homeBanner');
-      }
-
-      const processedNews = [...newsData];
-      if (featuredIds.length > 0) {
-        const topFeatureId = featuredIds[0];
-        const featureIdx = processedNews.findIndex(a => a.id === topFeatureId);
-        if (featureIdx > 0) {
-          const item = processedNews.splice(featureIdx, 1)[0];
-          processedNews.unshift(item);
+        if (ads.homeBanner.enabled && ads.homeBanner.imageUrl) {
+          AdminService.recordAdImpression('homeBanner');
         }
-      }
+      }).catch(err => console.error("Admin configs failed", err));
 
-      setArticles(processedNews);
-      setError(null);
     } catch (err: any) {
       console.warn("Home Sync failed. Using existing local state.");
       if (articles.length === 0) {
         setError("Network connection interrupted. Please check your internet and retry.");
       }
-    } finally {
-      setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchContent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -217,22 +228,9 @@ const Home: React.FC = () => {
     AdminService.recordAdClick('homeBanner');
   };
 
-  if (loading && articles.length === 0) {
-    return (
-      <div className="min-h-screen bg-kph-light flex items-center justify-center">
-        <SEO title="Initializing News Feed... | KPH" description="Loading the latest political updates for Kwara State." />
-        <div className="flex flex-col items-center gap-4 text-center px-4">
-          <div className="relative">
-            <Loader2 className="w-14 h-14 text-kph-red animate-spin" />
-            <Zap className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-kph-red/20" size={20} />
-          </div>
-          <div className="space-y-1">
-            <p className="text-kph-charcoal text-xl font-black tracking-tighter uppercase">KPH Engine</p>
-            <p className="text-gray-400 text-sm font-medium animate-pulse">Initializing local data vault...</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (isInitialLoad && articles.length === 0) {
+    // Blank transition screen, no spinners. SWR will resolve instantly if cached.
+    return <div className="min-h-screen bg-kph-light" />;
   }
 
   if (error && articles.length === 0) {

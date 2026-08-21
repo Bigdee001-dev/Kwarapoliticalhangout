@@ -7,7 +7,7 @@ import {
   ChevronLeft, MoreHorizontal, ShieldAlert, Clock, User,
   Twitter, Facebook, Linkedin, Link as LinkIcon, Eye,
   ArrowRight, Heart, UserCircle2, MessageCircle, Video, Play, Volume2, VolumeX,
-  ChevronDown
+  ChevronDown, AlertTriangle
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Logo from '../components/Logo';
@@ -19,12 +19,35 @@ import SEO from '../components/SEO';
 import { toast } from 'sonner';
 import { getDeviceId } from '../hooks/useProfile';
 
+const LazyHeroImage: React.FC<{ src: string, alt: string }> = ({ src, alt }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  return (
+    <div className="absolute inset-0 w-full h-full bg-zinc-900">
+      <motion.img
+        initial={{ scale: 1.05, opacity: 0 }}
+        animate={{ scale: isLoaded ? 1 : 1.05, opacity: isLoaded ? 0.9 : 0 }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
+        src={src}
+        alt={alt}
+        onLoad={() => setIsLoaded(true)}
+        className="w-full h-full object-cover"
+      />
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-white/20 animate-spin" />
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ArticleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
-  const [pageLoading, setPageLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [adConfig, setAdConfig] = useState<AdConfig | null>(null);
 
   const [likes, setLikes] = useState(0);
@@ -49,36 +72,52 @@ const ArticleDetail: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
     const loadArticle = async () => {
-      setPageLoading(true);
       if (id) {
         window.scrollTo(0, 0);
-        const found = await NewsService.getArticleById(id);
-        if (found) {
-          setArticle(found);
-          setLikes(found.likes || 0);
+        
+        // Use SWR pattern with onUpdate callback
+        const found = await NewsService.getArticleById(id, (updatedArticle) => {
+          if (mounted) {
+            setArticle(updatedArticle);
+            setLikes(updatedArticle.likes || 0);
+          }
+        });
 
-          // Check if liked using Supabase
-          const deviceId = getDeviceId();
-          const liked = await NewsService.checkIfLiked(id, deviceId);
-          setIsLiked(liked);
+        if (mounted) {
+          if (found) {
+            setArticle(found);
+            setLikes(found.likes || 0);
 
-          // Load comments
-          const articleComments = await NewsService.getComments(id);
-          setComments(articleComments);
-
-          // Load related
-          const all = await NewsService.getLatestNews(found.category);
-          setRelatedArticles(all.filter(a => a.id !== id).slice(0, 3));
+            // Fetch auxiliary data in background (Progressive Rendering)
+            const deviceId = getDeviceId();
+            Promise.all([
+              NewsService.checkIfLiked(id, deviceId),
+              NewsService.getComments(id),
+              NewsService.getLatestNews(found.category),
+              AdminService.getAdConfig()
+            ]).then(([liked, articleComments, all, config]) => {
+              if (mounted) {
+                setIsLiked(liked);
+                setComments(articleComments);
+                setRelatedArticles(all.filter(a => a.id !== id).slice(0, 3));
+                setAdConfig(config);
+              }
+            }).catch(console.error);
+          }
+          setIsInitialLoad(false);
         }
-
-        // Load AdConfig for popup
-        const config = await AdminService.getAdConfig();
-        setAdConfig(config);
+      } else {
+        setIsInitialLoad(false);
       }
-      setPageLoading(false);
     };
     loadArticle();
+
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
 
@@ -148,24 +187,9 @@ const ArticleDetail: React.FC = () => {
     }
   };
 
-  if (pageLoading) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-6">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Loader2 className="w-10 h-10 text-kph-red" />
-        </motion.div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-400"
-        >
-          Loading Article
-        </motion.p>
-      </div>
-    );
+  if (isInitialLoad && !article) {
+    // Zero-loading state. Just an empty background until text is ready.
+    return <div className="min-h-screen bg-white" />;
   }
 
   if (!article) {
@@ -180,6 +204,14 @@ const ArticleDetail: React.FC = () => {
   }
 
   const hasVideo = !!article.videoUrl;
+
+  const prepareHTML = (html: string | undefined) => {
+    if (!html) return '';
+    // Inject loading="lazy" into img and iframe tags if not already present
+    let prepared = html.replace(/<img(?!.*?loading=[\'"]lazy[\'"])/g, '<img loading="lazy"');
+    prepared = prepared.replace(/<iframe(?!.*?loading=[\'"]lazy[\'"])/g, '<iframe loading="lazy"');
+    return prepared;
+  };
 
   return (
     <div className="bg-white min-h-screen font-sans text-zinc-900 selection:bg-kph-red/10 selection:text-kph-red pb-32 relative overflow-x-hidden w-full">
@@ -243,27 +275,20 @@ const ArticleDetail: React.FC = () => {
 
       {/* Hero Section */}
       <section className="relative w-full h-[60vh] lg:h-[75vh] bg-black overflow-hidden hero-section">
-        <div className="hero-grain opacity-10" />
+        <div className="hero-grain opacity-10 z-[1]" />
 
-        <motion.img
-          initial={{ scale: 1.05, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.9 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          src={article.imageUrl}
-          alt={article.title}
-          className="w-full h-full object-cover"
-        />
+        <LazyHeroImage src={article.imageUrl} alt={article.title} />
         
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent"></div>
 
         {/* Hero Content Overlay */}
         <div className="absolute inset-0 flex items-end">
-          <div className="container mx-auto px-4 md:px-12 pb-12 lg:pb-24 max-w-5xl hero-text-glass">
+          <div className="container mx-auto px-4 md:px-12 pb-12 lg:pb-24 max-w-5xl hero-text-glass z-10">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
               className="w-full pt-16"
             >
               <div className="flex items-center gap-3 mb-6">
@@ -316,9 +341,9 @@ const ArticleDetail: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
       {/* Main Content Column */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
         className="lg:col-span-8 py-8 lg:py-16 w-full max-w-full overflow-hidden"
       >
         {/* Abstract */}
@@ -340,6 +365,7 @@ const ArticleDetail: React.FC = () => {
                     className="w-full h-full absolute inset-0"
                     src={`https://www.youtube.com/embed/${article.videoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^#&?]{11})/)?.[1]}?controls=1`}
                     frameBorder="0"
+                    loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   ></iframe>
@@ -348,7 +374,7 @@ const ArticleDetail: React.FC = () => {
                     className="w-full h-full absolute inset-0 object-contain bg-black"
                     controls
                     playsInline
-                    preload="metadata"
+                    preload="none"
                     poster={article.imageUrl}
                   >
                     <source src={article.videoUrl} type="video/mp4" />
@@ -358,10 +384,28 @@ const ArticleDetail: React.FC = () => {
             </div>
           )}
 
+        {/* Abstract */}
+        {article.excerpt && (
+          <div className="mb-10 border-l-3 border-kph-red pl-4 sm:pl-8 py-1">
+            <p className="font-serif text-base sm:text-lg md:text-xl text-zinc-700 leading-relaxed italic font-medium break-words whitespace-normal">
+              {article.excerpt}
+            </p>
+          </div>
+        )}
+
+        {/* Content */}
+        {!article.content ? (
+          <div className="bg-red-50 text-red-800 p-6 rounded-xl border border-red-100 flex flex-col items-center justify-center text-center">
+            <AlertTriangle className="mb-2 text-kph-red w-8 h-8" />
+            <p className="font-bold">Full story content could not be loaded.</p>
+            <p className="text-sm mt-1 opacity-80">Please check your internet connection and refresh the page to try again.</p>
+          </div>
+        ) : (
           <div
             className="prose prose-zinc prose-sm sm:prose-base md:prose-lg max-w-full overflow-hidden break-words whitespace-normal prose-p:mb-6 prose-headings:font-serif prose-headings:font-bold prose-headings:text-zinc-900 prose-a:text-kph-red prose-blockquote:border-l-kph-red prose-blockquote:font-serif prose-blockquote:italic prose-blockquote:bg-zinc-50 prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:rounded-lg prose-img:max-w-full prose-img:h-auto prose-img:rounded-xl"
-            dangerouslySetInnerHTML={{ __html: article.content || '<p className="text-zinc-400 italic">Decoding report...</p>' }}
+            dangerouslySetInnerHTML={{ __html: prepareHTML(article.content) }}
           />
+        )}
 
           {/* Pull Quote */}
           <div className="my-12 sm:my-16 px-6 sm:px-8 py-8 sm:py-10 bg-zinc-50 rounded-2xl border border-zinc-100 relative overflow-hidden text-center">
