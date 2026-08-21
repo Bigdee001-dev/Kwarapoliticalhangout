@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
-import { Lock, Mail, AlertCircle, Chrome } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -21,7 +21,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   
   // If already logged in, redirect to dashboard
@@ -67,24 +67,6 @@ const Login: React.FC = () => {
     return false;
   };
 
-  const onGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/admin'
-        }
-      });
-      if (error) throw error;
-      // the redirect handles the rest, but checkAdminAccess runs in auth state change listeners
-    } catch (error: any) {
-      console.error('Google Sign-In Error:', error);
-      toast.error('Google Sign-In failed. Please try again.', { duration: 8000 });
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
@@ -147,30 +129,6 @@ const Login: React.FC = () => {
           </CardHeader>
 
           <CardContent className="space-y-6 pt-8">
-            <Button
-              variant="outline"
-              onClick={onGoogleSignIn}
-              disabled={isLoading || isGoogleLoading}
-              className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold h-12 transition-all flex gap-3 text-xs uppercase tracking-widest"
-            >
-              {isGoogleLoading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full"
-                />
-              ) : (
-                <Chrome className="h-4 w-4 text-sky-400" />
-              )}
-              Sign in with Corporate Google
-            </Button>
-
-            <div className="relative flex items-center gap-4 py-2">
-              <div className="h-px flex-1 bg-white/5" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/20">or credential bypass</span>
-              <div className="h-px flex-1 bg-white/5" />
-            </div>
-
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-[10px] uppercase tracking-[0.1em] text-white/40 font-black">Email Identity</Label>
@@ -199,10 +157,17 @@ const Login: React.FC = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-kph-red transition-colors" />
                   <Input
                     id="password"
-                    type="password"
-                    className="bg-white/[0.03] border-white/10 pl-10 focus:border-kph-red/50 focus:ring-0 text-sm h-12 transition-all"
+                    type={showPassword ? "text" : "password"}
+                    className="bg-white/[0.03] border-white/10 pl-10 pr-10 focus:border-kph-red/50 focus:ring-0 text-sm h-12 transition-all"
                     {...register('password')}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 {errors.password && (
                   <p className="flex items-center gap-1 text-[10px] text-destructive font-black uppercase tracking-tighter italic">
@@ -213,7 +178,7 @@ const Login: React.FC = () => {
 
               <Button
                 type="submit"
-                disabled={isLoading || isGoogleLoading}
+                disabled={isLoading}
                 className="w-full bg-white text-black hover:bg-neutral-200 transition-all font-black h-12 shadow-2xl shadow-white/5 disabled:opacity-50 text-xs uppercase tracking-widest mt-4"
               >
                 {isLoading ? "Authenticating..." : "Establish Connection"}

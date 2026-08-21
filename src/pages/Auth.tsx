@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, CheckCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import Logo from '../components/Logo';
@@ -12,6 +12,7 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isWriterSignup, setIsWriterSignup] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handlePostAuthRedirect = async (user: any, signupRole?: string) => {
@@ -188,25 +189,6 @@ const Auth: React.FC = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
-      // Note: With OAuth, the redirection handles the rest, but if it returns data we can redirect manually if needed.
-    } catch (error: any) {
-      console.error('Google Auth error:', error);
-      toast.error('Google Sign-In failed.', { duration: 8000 });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 flex animate-fade-in">
       {/* Left Side - Visuals (Hidden on mobile) */}
@@ -323,13 +305,20 @@ const Auth: React.FC = () => {
                 <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-kph-red transition-colors" size={20} />
                     <input 
-                        type="password" 
-                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-kph-red focus:bg-white focus:ring-4 focus:ring-red-50/50 transition-all font-medium"
+                        type={showPassword ? "text" : "password"}
+                        className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-kph-red focus:bg-white focus:ring-4 focus:ring-red-50/50 transition-all font-medium"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-kph-red transition-colors focus:outline-none"
+                    >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                 </div>
               </div>
 
@@ -369,28 +358,6 @@ const Auth: React.FC = () => {
                 )}
               </button>
            </form>
-
-           <div className="mt-8">
-              <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                  </div>
-              </div>
-
-              <div className="mt-6 flex gap-4 justify-center">
-                 <button 
-                  onClick={handleGoogleSignIn}
-                  disabled={isLoading}
-                  className="flex-1 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-bold text-sm text-gray-700 group"
-                 >
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:scale-110 transition-transform" alt="Google" />
-                    Google
-                 </button>
-              </div>
-           </div>
 
         </div>
       </div>
