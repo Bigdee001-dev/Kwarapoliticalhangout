@@ -209,7 +209,7 @@ const Writers: React.FC = () => {
   };
 
   const filteredWriters = writers?.filter((w: any) => 
-    (w.display_name || w.displayName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (w.name || w.display_name || w.displayName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (w.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -309,13 +309,13 @@ const Writers: React.FC = () => {
                       <Avatar className="h-10 w-10 border border-neutral-100 ring-4 ring-neutral-50">
                         <AvatarImage src={writer.avatar_url || writer.photo_url || writer.photoUrl || writer.photoURL} />
                         <AvatarFallback className="bg-neutral-100 text-[10px] font-bold">
-                          {(writer.display_name || writer.displayName || 'U N').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                          {(writer.name || writer.display_name || writer.displayName || 'U N').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-bold text-kph-charcoal">{writer.display_name || writer.displayName || 'Unknown Name'}</span>
+                        <span className="font-bold text-kph-charcoal">{writer.name || writer.display_name || writer.displayName || 'Unknown Name'}</span>
                         <span className="text-xs text-muted-foreground font-medium">{writer.email}</span>
                       </div>
                     </TableCell>
@@ -358,7 +358,7 @@ const Writers: React.FC = () => {
                             <DropdownMenuItem onClick={() => navigate(`/admin/writers/${writer.id || writer.uid}`)}>
                               <TrendingUp className="mr-2 h-3.5 w-3.5" /> Intel & Stats
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setMessageModal({ open: true, writerId: writer.id || writer.uid, writerName: writer.display_name || writer.displayName })}>
+                            <DropdownMenuItem onClick={() => setMessageModal({ open: true, writerId: writer.id || writer.uid, writerName: writer.name || writer.display_name || writer.displayName })}>
                               <Mail className="mr-2 h-3.5 w-3.5" /> Dispatch Message
                             </DropdownMenuItem>
                           </DropdownMenuGroup>
@@ -385,7 +385,7 @@ const Writers: React.FC = () => {
                             {writer.status !== 'suspended' && (
                               <DropdownMenuItem 
                                 className="text-amber-600 focus:text-amber-700 focus:bg-amber-50"
-                                onClick={() => { if(window.confirm(`Suspend ${writer.display_name || writer.displayName}?`)) handleAction(writer.id || writer.uid, 'suspendWriter'); }}
+                                onClick={() => { if(window.confirm(`Suspend ${writer.name || writer.display_name || writer.displayName}?`)) handleAction(writer.id || writer.uid, 'suspendWriter'); }}
                               >
                                 <Clock className="mr-2 h-3.5 w-3.5" /> Suspend
                               </DropdownMenuItem>
@@ -393,7 +393,7 @@ const Writers: React.FC = () => {
                             {writer.status !== 'banned' && (
                               <DropdownMenuItem 
                                 className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 font-bold"
-                                onClick={() => { if(window.confirm(`Permanently ban ${writer.display_name || writer.displayName}?`)) handleAction(writer.id || writer.uid, 'banWriter'); }}
+                                onClick={() => { if(window.confirm(`Permanently ban ${writer.name || writer.display_name || writer.displayName}?`)) handleAction(writer.id || writer.uid, 'banWriter'); }}
                               >
                                 <Ban className="mr-2 h-3.5 w-3.5" /> Ban Forever
                               </DropdownMenuItem>
@@ -440,10 +440,10 @@ const Writers: React.FC = () => {
                     <div className="flex items-start gap-4">
                       <Avatar className="h-14 w-14 border-2 border-neutral-100 ring-4 ring-neutral-50 shadow-sm">
                         <AvatarImage src={app.avatar_url || app.photo_url || app.photoUrl} />
-                        <AvatarFallback className="bg-neutral-100 text-xs font-bold font-serif">{(app.display_name || app.displayName)?.[0]}</AvatarFallback>
+                        <AvatarFallback className="bg-neutral-100 text-xs font-bold font-serif">{(app.name || app.display_name || app.displayName)?.[0]}</AvatarFallback>
                       </Avatar>
                       <div className="space-y-1">
-                        <h3 className="font-bold text-kph-charcoal leading-tight">{app.display_name || app.displayName}</h3>
+                        <h3 className="font-bold text-kph-charcoal leading-tight">{app.name || app.display_name || app.displayName}</h3>
                         <p className="text-xs text-muted-foreground font-medium">{app.email}</p>
                         <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 text-[9px] font-black uppercase tracking-widest mt-1">
                           {app.specialization || 'Generalist'}
@@ -475,7 +475,7 @@ const Writers: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       className="rounded-none h-12 text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-black uppercase text-[10px] tracking-widest"
-                      onClick={() => setRejectModal({ open: true, applicantId: app.id, applicantName: app.display_name || app.displayName })}
+                      onClick={() => setRejectModal({ open: true, applicantId: app.id, applicantName: app.name || app.display_name || app.displayName })}
                     >
                       <XCircle className="mr-2 h-4 w-4" /> Reject
                     </Button>

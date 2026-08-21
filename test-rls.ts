@@ -4,14 +4,12 @@ dotenv.config();
 
 const supabase = createClient(process.env.VITE_SUPABASE_URL!, process.env.VITE_SUPABASE_ANON_KEY!);
 
-async function run() {
-  const { data, error } = await supabase.from('site_settings').select('*');
+async function check() {
+  const { data, error } = await supabase.from('profiles').select('*').limit(1);
   if (error) {
-    console.error('Error fetching site_settings (anon):', error.message);
+    console.log('Error selecting profiles:', error.message);
   } else {
-    console.log('Successfully fetched site_settings (anon):', data.length, 'rows');
-    data.forEach(d => console.log(`- ${d.id}`));
+    console.log('Select successful. Row count:', data.length);
   }
 }
-
-run();
+check();

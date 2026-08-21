@@ -56,7 +56,7 @@ export const useAuth = () => {
             // Auto-provision admin profile for testing purposes so user can access dashboard
             const newProfile = {
               id: user.id,
-              display_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Admin',
+              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Admin',
               email: user.email,
               role: 'admin',
               status: 'active',

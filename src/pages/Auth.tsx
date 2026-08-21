@@ -16,7 +16,7 @@ const Auth: React.FC = () => {
 
   const handlePostAuthRedirect = async (user: any, signupRole?: string) => {
     try {
-      const { data: userDoc, error } = await supabase
+      let { data: userDoc, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -42,33 +42,65 @@ const Auth: React.FC = () => {
         return;
       }
 
-      if (!userDoc && !error) {
-         // Should not happen if trigger works, but just in case
-      }
-
-      // If they just signed up, update their role if they chose writer
-      if (signupRole) {
-        await supabase.from('profiles').upsert({
+      // Handle First-Time Authentication / Profile Creation
+      if (!userDoc) {
+        const embeddedRole = signupRole || user.user_metadata?.requested_role || 'reader';
+        const newProfile = {
             id: user.id,
-            display_name: user.user_metadata?.full_name || fullName || 'New Member',
+            name: user.user_metadata?.full_name || fullName || 'New Member',
             email: user.email,
-            role: signupRole,
-            status: signupRole === 'writer' ? 'pending' : 'active',
+            role: embeddedRole,
+            status: embeddedRole === 'writer' ? 'pending' : 'active',
             updated_at: new Date().toISOString()
-        });
-        if (signupRole === 'writer') {
-          toast.success('Application submitted! Your writer account is pending verification.');
-          navigate('/dashboard');
+        };
+        
+        const { data: insertedDoc, error: insertError } = await supabase
+            .from('profiles')
+            .upsert(newProfile)
+            .select()
+            .single();
+            
+        if (!insertError && insertedDoc) {
+            userDoc = insertedDoc;
+            if (signupRole) {
+                // If this is immediately after a direct signup (e.g. email confirm disabled)
+                if (embeddedRole === 'writer') {
+                    toast.success('Application submitted! Your writer account is pending verification.');
+                    navigate('/dashboard');
+                } else {
+                    toast.success('Welcome to Kwara Political Hangout!');
+                    navigate('/');
+                }
+                return;
+            }
         } else {
-          toast.success('Welcome to Kwara Political Hangout!');
-          navigate('/');
+            console.error('Failed to automatically create profile:', insertError);
         }
-        return;
       }
 
       if (userDoc) {
-        const role = (userDoc.role || '').toLowerCase();
-        const status = (userDoc.status || '').toLowerCase();
+        let role = (userDoc.role || '').toLowerCase();
+        let status = (userDoc.status || '').toLowerCase();
+        
+        // Auto-upgrade if a database trigger incorrectly created them as a reader
+        const requestedRole = user.user_metadata?.requested_role;
+        if (role === 'reader' && requestedRole === 'writer') {
+            const { data: updatedDoc, error: updateError } = await supabase
+                .from('profiles')
+                .update({ role: 'writer', status: 'pending' })
+                .eq('id', user.id)
+                .select()
+                .single();
+                
+            if (!updateError && updatedDoc) {
+                userDoc = updatedDoc;
+                role = 'writer';
+                status = 'pending';
+                toast.success('Your writer profile has been initialized.');
+            } else {
+                console.error('Failed to auto-upgrade profile:', updateError);
+            }
+        }
 
         if (status === 'suspended' || status === 'banned') {
           await supabase.auth.signOut();
@@ -109,19 +141,28 @@ const Auth: React.FC = () => {
         if (error) throw error;
         await handlePostAuthRedirect(data.user);
       } else {
+        const requestedRole = isWriterSignup ? 'writer' : 'reader';
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
-                    full_name: fullName
+                    full_name: fullName,
+                    requested_role: requestedRole
                 }
             }
         });
         if (error) throw error;
-        // Use the selected role during signup
-        if (data.user) {
-            await handlePostAuthRedirect(data.user, isWriterSignup ? 'writer' : 'reader');
+        
+        // If email confirmation is required, the user does not have a session yet
+        if (data.user && !data.session) {
+            toast.success('Please check your email for a confirmation link to complete registration.', { duration: 8000 });
+            return;
+        }
+
+        // Use the selected role if they bypassed confirmation (e.g., auto sign-in)
+        if (data.user && data.session) {
+            await handlePostAuthRedirect(data.user, requestedRole);
         }
       }
     } catch (error: any) {
@@ -137,6 +178,8 @@ const Auth: React.FC = () => {
         message = 'The password provided is too weak. Please use a stronger password.';
       } else if (errorMessage.includes('Invalid login credentials')) {
         message = 'Invalid email or password. Please try again.';
+      } else if (errorMessage.includes('rate limit')) {
+        message = 'Supabase email rate limit exceeded. Please wait a while or disable "Confirm Email" in your Supabase Auth settings to continue testing.';
       }
 
       toast.error(message, { duration: 8000 });
@@ -296,7 +339,8 @@ const Auth: React.FC = () => {
                         <input 
                           type="checkbox" 
                           checked={isWriterSignup}
-                          onChange={(e) => setIsWriterSignup(e.target.checked)}
+                          onChange={() => {}} // React requires onChange for controlled inputs
+                          onClick={(e) => { e.stopPropagation(); setIsWriterSignup(!isWriterSignup); }}
                           className="w-5 h-5 rounded text-kph-red focus:ring-kph-red border-gray-300"
                         />
                         <div>

@@ -387,10 +387,10 @@ return (
          <div className="p-6 border-t border-slate-100 bg-slate-50/50">
             <div className="flex items-center gap-3 mb-4">
                <div className="w-10 h-10 rounded-xl bg-[#8B0000] flex items-center justify-center font-bold text-white text-sm">
-                  {(userProfile?.displayName || currentUser?.email || 'U').charAt(0).toUpperCase()}
+                  {(userProfile?.name || currentUser?.email || 'U').charAt(0).toUpperCase()}
                </div>
                <div className="overflow-hidden">
-                  <p className="text-xs font-bold text-slate-900 truncate">{userProfile?.displayName || currentUser?.email?.split('@')[0]}</p>
+                  <p className="text-xs font-bold text-slate-900 truncate">{userProfile?.name || currentUser?.email?.split('@')[0]}</p>
                   <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
                      {userProfile?.status === 'pending' ? 'Application Pending' : (userProfile?.role || 'Contributor')}
                   </p>
@@ -473,7 +473,7 @@ return (
                            )}
 
                            <header className="flex flex-col gap-1">
-                              <h2 className="text-2xl font-bold text-slate-900 font-serif">Welcome back, {userProfile?.displayName?.split(' ')[0] || 'Writer'}</h2>
+                              <h2 className="text-2xl font-bold text-slate-900 font-serif">Welcome back, {userProfile?.name?.split(' ')[0] || 'Writer'}</h2>
                               <p className="text-sm text-slate-500">Here's what's happening with your content today.</p>
                            </header>
 
@@ -632,7 +632,7 @@ return (
                                  <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                        <div className="w-14 h-14 bg-slate-950 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                                          {(userProfile?.displayName || currentUser?.email || 'U').charAt(0).toUpperCase()}
+                                          {(userProfile?.name || currentUser?.email || 'U').charAt(0).toUpperCase()}
                                        </div>
                                        <div>
                                           <h4 className="font-bold text-slate-900">Writer Identity</h4>
@@ -645,7 +645,7 @@ return (
                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
                                     <div className="space-y-2">
                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Display Name</label>
-                                       <div className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600">{userProfile?.displayName || 'Not Set'}</div>
+                                       <div className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600">{userProfile?.name || 'Not Set'}</div>
                                     </div>
                                     <div className="space-y-2">
                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Email Address</label>
