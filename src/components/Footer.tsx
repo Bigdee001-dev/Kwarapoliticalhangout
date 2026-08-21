@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
     if (promptable) {
       promptable.prompt();
     } else {
-      alert("To install the app, tap the Share button in your browser and select 'Add to Home Screen'.");
+      window.dispatchEvent(new Event('showInstallGuide'));
     }
   };
   return (

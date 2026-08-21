@@ -1,21 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { motion, AnimatePresence } from 'motion/react';
 import IOSInstallGuide from './IOSInstallGuide';
+import AndroidInstallGuide from './AndroidInstallGuide';
 
 const InstallPrompt: React.FC = () => {
   const { promptable, isStandalone, isIOS } = useInstallPrompt();
   const [isDismissed, setIsDismissed] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
-
-  if (isStandalone || isDismissed) {
-    return null;
-  }
-
-  if (!promptable && !isIOS) {
-    return null;
-  }
+  const [showAndroidGuide, setShowAndroidGuide] = useState(false);
 
   const handleInstall = () => {
     if (isIOS) {
@@ -30,13 +24,26 @@ const InstallPrompt: React.FC = () => {
         }
         setIsDismissed(true);
       });
+    } else {
+      // Android, but promptable is null (e.g. dismissed or already installed)
+      setShowAndroidGuide(true);
     }
   };
+
+  useEffect(() => {
+    const handleShowGuide = () => {
+      handleInstall();
+    };
+    window.addEventListener('showInstallGuide', handleShowGuide);
+    return () => window.removeEventListener('showInstallGuide', handleShowGuide);
+  }, [isIOS, promptable]);
+
+  const showBanner = !isStandalone && !isDismissed && (promptable || isIOS);
 
   return (
     <>
       <AnimatePresence>
-        {!showIOSGuide && (
+        {showBanner && !showIOSGuide && !showAndroidGuide && (
           <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -72,6 +79,7 @@ const InstallPrompt: React.FC = () => {
         )}
       </AnimatePresence>
       <IOSInstallGuide isOpen={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
+      <AndroidInstallGuide isOpen={showAndroidGuide} onClose={() => setShowAndroidGuide(false)} />
     </>
   );
 };
