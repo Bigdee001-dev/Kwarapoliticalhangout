@@ -3,7 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
-const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || 'BGHOjr5JR4YA3uKvS1kj0G84dM_JcoYzYJb4aGIs_blqLhI_O4aST-ToiG-_kqD5u7JS0d5B16KrAB84RWucBA8';
+const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || 'BJCogZrNPlqbX1VDRvYd_jIQLmbU-Hm6eJnnY-NXmQImWthyIpRAr_egw1B-D-uMELgWrUwEq-mlX3XiNqUvicI';
 const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
 if (vapidPublicKey && vapidPrivateKey) {
