@@ -16,7 +16,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/((?!sitemap.xml|robots.txt|assets/).*)",
+      "source": "/((?!sitemap\\.xml|robots\\.txt|assets/|logo192\\.png|logo512\\.png|maskable-icon-192\\.png|maskable-icon-512\\.png|logo\\.svg|manifest\\.json|sw\\.js|workbox-.*\\.js).*)",
       "destination": "/index.html"
     }
   ]

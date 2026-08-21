@@ -16,9 +16,11 @@ export default defineConfig(({ mode, command }) => {
         tailwindcss(),
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+          manifestFilename: 'manifest.json',
+          includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'logo.svg'],
           manifest: {
             id: '/?source=pwa',
+            prefer_related_applications: false,
             name: 'KPH News',
             short_name: 'KPH News',
             description: 'The leading platform for breaking news, political analysis, and government reporting in Kwara State.',
