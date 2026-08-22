@@ -108,7 +108,17 @@ serve(async (req: Request) => {
     articleId = url.searchParams.get('id') || ""
   }
 
-  console.log(`[ArticleID] Extracted: "${articleId}"`)
+  // 3. Extract UUID if the articleId includes a slug prefix (e.g., my-article-title-[UUID])
+  if (articleId && articleId.length > 36) {
+    const maybeUuid = articleId.slice(-36)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (uuidRegex.test(maybeUuid)) {
+      articleId = maybeUuid
+      console.log(`[ArticleID] Extracted UUID from slug: "${articleId}"`)
+    }
+  }
+
+  console.log(`[ArticleID] Final Extracted: "${articleId}"`)
 
   if (!articleId) {
     console.warn('[Redirect] No articleId found, redirecting to home')
