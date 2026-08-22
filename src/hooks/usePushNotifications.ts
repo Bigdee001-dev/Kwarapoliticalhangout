@@ -64,7 +64,7 @@ export const usePushNotifications = () => {
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        applicationServerKey: urlBase64ToUint8Array(publicVapidKey.trim())
       });
 
       const subJSON = subscription.toJSON();
@@ -91,7 +91,7 @@ export const usePushNotifications = () => {
       if (Notification.permission === 'denied') {
         toast.error('Notification permission was denied. Please enable them in your browser settings.');
       } else {
-        toast.error('Failed to subscribe to notifications.');
+        toast.error(`Failed to subscribe: ${error?.message || 'Unknown error'}`);
       }
     } finally {
       setIsLoading(false);
