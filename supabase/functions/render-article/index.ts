@@ -69,19 +69,14 @@ function buildMetaHtml(title: string, description: string, image: string, canoni
   <meta name="twitter:title" content="${t}">
   <meta name="twitter:description" content="${d}">
 
-  <!-- Immediately redirect real browsers to the React SPA. -->
-  <noscript>
-    <meta http-equiv="refresh" content="0; url=${url}">
-  </noscript>
 </head>
 <body>
-  <script>
-    window.location.replace("${url}");
-  </script>
-  <h1>${t}</h1>
-  <p>${d}</p>
-  ${img ? `<img src="${img}" alt="${t}" style="max-width:100%; height:auto;">` : ''}
-  <a href="${url}">Read the full article on KPH News</a>
+  <article>
+    <h1>${t}</h1>
+    <p>${d}</p>
+    ${img ? `<img src="${img}" alt="${t}" style="max-width:100%; height:auto;">` : ''}
+    <a href="${url}">Read the full article on KPH News</a>
+  </article>
 </body>
 </html>`
 }

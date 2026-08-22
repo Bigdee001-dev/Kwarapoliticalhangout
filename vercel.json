@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://ajqzyygzgjrydxilzzto.supabase.co/functions/v1/sitemap"
+    },
+    {
       "source": "/article/:id",
       "has": [
         {
@@ -9,10 +13,25 @@
           "value": ".*(facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|TelegramBot|Slackbot|Discordbot|Googlebot|Bingbot).*"
         }
       ],
-      "destination": "https://ajqzyygzgjrydxilzzto.functions.supabase.co/render-article/:id"
+      "destination": "https://ajqzyygzgjrydxilzzto.supabase.co/functions/v1/render-article?id=:id"
+    },
+    {
+      "source": "/sports/article/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|TelegramBot|Slackbot|Discordbot|Googlebot|Bingbot).*"
+        }
+      ],
+      "destination": "https://ajqzyygzgjrydxilzzto.supabase.co/functions/v1/render-article?id=:id"
     },
     {
       "source": "/article/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sports/article/:id",
       "destination": "/index.html"
     },
     {
