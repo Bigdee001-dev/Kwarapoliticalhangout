@@ -55,6 +55,13 @@ export const usePushNotifications = () => {
         throw new Error('VAPID public key not found in environment');
       }
 
+      // If there's an existing subscription (e.g. from PushAlert), unsubscribe first 
+      // so we don't get a conflict error on applicationServerKey
+      const existingSubscription = await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        await existingSubscription.unsubscribe();
+      }
+
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
