@@ -18,6 +18,7 @@ import { Article, Comment } from '../types';
 import SEO from '../components/SEO';
 import { toast } from 'sonner';
 import { getDeviceId } from '../hooks/useProfile';
+import { extractIdFromSlug, buildArticleSlugUrl } from '../utils/slugUtils';
 
 const LazyHeroImage: React.FC<{ src: string, alt: string }> = ({ src, alt }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -43,7 +44,8 @@ const LazyHeroImage: React.FC<{ src: string, alt: string }> = ({ src, alt }) => 
 };
 
 const ArticleDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slugAndId } = useParams<{ slugAndId: string }>();
+  const id = extractIdFromSlug(slugAndId || '');
   const navigate = useNavigate();
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
@@ -85,6 +87,15 @@ const ArticleDetail: React.FC = () => {
             setLikes(updatedArticle.likes || 0);
           }
         });
+
+        // Option A: If the URL is just the UUID without the slug, dynamically redirect to the SEO-friendly URL
+        if (mounted && found && slugAndId && slugAndId === id) {
+          const seoUrl = buildArticleSlugUrl(id, found.title);
+          if (seoUrl !== `/article/${id}`) {
+            navigate(seoUrl, { replace: true });
+            return;
+          }
+        }
 
         if (mounted) {
           if (found) {
@@ -546,7 +557,7 @@ const ArticleDetail: React.FC = () => {
             <h3 className="text-[9px] sm:text-[10px] font-bold text-zinc-900 uppercase tracking-widest border-b border-zinc-100 pb-3">Related Stories</h3>
             <div className="space-y-6">
               {relatedArticles.map((rel, i) => (
-                <Link to={`/article/${rel.id}`} key={i} className="group block flex gap-4 items-start w-full overflow-hidden">
+                <Link to={buildArticleSlugUrl(rel.id, rel.title)} key={i} className="group block flex gap-4 items-start w-full overflow-hidden">
                   <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border border-zinc-100">
                     <img
                       src={rel.imageUrl}

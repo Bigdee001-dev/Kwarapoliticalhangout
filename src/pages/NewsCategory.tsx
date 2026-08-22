@@ -5,6 +5,7 @@ import ArticleCard from '../components/ArticleCard';
 import Sidebar from '../components/Sidebar';
 import { NewsService } from '../services/newsService';
 import { Article } from '../types';
+import { buildArticleSlugUrl } from '../utils/slugUtils';
 import SEO from '../components/SEO';
 
 interface NewsCategoryProps {
@@ -121,7 +122,7 @@ const NewsCategory: React.FC<NewsCategoryProps> = ({ title, topic, description }
             {/* Featured in Category */}
             {featured && (
               <div className="bg-white p-5 lg:p-6 rounded-2xl shadow-lg border border-gray-100 animate-slide-up">
-                <Link to={`/article/${featured.id}`} className="block relative h-64 lg:h-80 rounded-xl overflow-hidden mb-5 group cursor-pointer">
+                <Link to={buildArticleSlugUrl(featured.id, featured.title)} className="block relative h-64 lg:h-80 rounded-xl overflow-hidden mb-5 group cursor-pointer">
                   <img
                     src={featured.imageUrl}
                     alt={featured.title}
@@ -139,7 +140,7 @@ const NewsCategory: React.FC<NewsCategoryProps> = ({ title, topic, description }
                     <span className="font-bold text-kph-charcoal">{featured.author}</span>
                     <span>{featured.date}</span>
                   </div>
-                  <Link to={`/article/${featured.id}`} className="text-kph-red text-sm font-bold flex items-center hover:text-red-900 transition-colors">
+                  <Link to={buildArticleSlugUrl(featured.id, featured.title)} className="text-kph-red text-sm font-bold flex items-center hover:text-red-900 transition-colors">
                     Read Full Story <ChevronRight size={14} className="ml-1" />
                   </Link>
                 </div>

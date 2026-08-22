@@ -4,6 +4,7 @@ import { Article } from '../types';
 import { Link } from 'react-router-dom';
 import { NewsService } from '../services/newsService';
 import { toast } from 'sonner';
+import { buildArticleSlugUrl } from '../utils/slugUtils';
 
 import { getDeviceId } from '../hooks/useProfile';
 
@@ -116,7 +117,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const articleUrl = `${window.location.origin}/article/${article.id}`;
+    const articleUrl = `${window.location.origin}${buildArticleSlugUrl(article.id, article.title)}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -159,14 +160,14 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
         </div>
 
         {/* Title */}
-        <Link to={`/article/${article.id}`} className="px-4 pb-3 block">
+        <Link to={buildArticleSlugUrl(article.id, article.title)} className="px-4 pb-3 block">
           <h3 className="text-[19px] sm:text-[22px] font-bold text-zinc-900 leading-[1.3] font-sans">
             {article.title}
           </h3>
         </Link>
 
         {/* Image */}
-        <Link to={`/article/${article.id}`} className="block w-full relative bg-zinc-100 aspect-video sm:aspect-[16/10] overflow-hidden group">
+        <Link to={buildArticleSlugUrl(article.id, article.title)} className="block w-full relative bg-zinc-100 aspect-video sm:aspect-[16/10] overflow-hidden group">
            <ArticleMedia article={article} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
            {hasVideo && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -193,7 +194,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
                <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
                <span className="text-[13px] font-bold">{likes.toLocaleString()}</span>
              </button>
-             <Link to={`/article/${article.id}#comments`} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
+             <Link to={`${buildArticleSlugUrl(article.id, article.title)}#comments`} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors border border-zinc-100">
                <MessageCircle size={18} />
              </Link>
            </div>
@@ -251,7 +252,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
           <span className="text-kph-red text-[9px] font-bold uppercase tracking-widest mb-1.5 flex items-center">
             {article.category}
           </span>
-          <Link to={`/article/${article.id}`}>
+          <Link to={buildArticleSlugUrl(article.id, article.title)}>
             <h3 className={`text-sm sm:text-base md:text-lg font-bold hover:text-kph-red transition-colors mb-2 leading-tight break-words ${darkMode ? 'text-white' : 'text-zinc-800'
               }`}>
               {article.title}
@@ -289,7 +290,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <Link to={`/article/${article.id}`}>
+          <Link to={buildArticleSlugUrl(article.id, article.title)}>
             <h4 className={`text-[10px] sm:text-[11px] font-bold group-hover:text-kph-red transition-colors line-clamp-2 leading-snug mb-1 break-words ${darkMode ? 'text-white' : 'text-zinc-800'
               }`}>
               {hasVideo && <Video size={10} className="inline mr-1 text-kph-red" />}
@@ -355,7 +356,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', de
           <span>{article.readTime}</span>
         </div>
 
-        <Link to={`/article/${article.id}`} className="group/title block">
+        <Link to={buildArticleSlugUrl(article.id, article.title)} className="group/title block">
           <h3 className={`text-sm sm:text-base font-bold mb-2 leading-tight group-hover/title:text-kph-red transition-colors duration-300 line-clamp-2 break-words ${darkMode ? 'text-white' : 'text-zinc-800'
             }`}>
             {article.title}

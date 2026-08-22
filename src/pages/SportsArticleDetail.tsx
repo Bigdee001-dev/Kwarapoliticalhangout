@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { extractIdFromSlug, buildArticleSlugUrl } from '../utils/slugUtils';
 import { ChevronLeft, Share2, ExternalLink, Loader2, Heart, MessageSquare } from 'lucide-react';
 import { NewsService } from '../services/newsService';
 import { Article } from '../types';
@@ -8,7 +9,8 @@ import { motion } from 'motion/react';
 import { ArticleMedia } from '../components/ArticleCard';
 
 const SportsArticleDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slugAndId } = useParams<{ slugAndId: string }>();
+  const id = extractIdFromSlug(slugAndId || '');
   const navigate = useNavigate();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,13 @@ const SportsArticleDetail: React.FC = () => {
       setLoading(true);
       const data = await NewsService.getArticleById(id);
       if (data) {
+        if (slugAndId && slugAndId === id && data.title) {
+          const seoUrl = buildArticleSlugUrl(id, data.title).replace('/article/', '/sports/article/');
+          if (seoUrl !== `/sports/article/${id}`) {
+            navigate(seoUrl, { replace: true });
+            return;
+          }
+        }
         setArticle(data);
       }
       setLoading(false);

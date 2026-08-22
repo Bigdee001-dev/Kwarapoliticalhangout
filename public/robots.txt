@@ -1,5 +1,12 @@
 User-agent: *
 Allow: /
 
-# Sitemaps
-Sitemap: https://www.kwarapoliticalhangout.com.ng/sitemap.xml
+# Exclude private/admin areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /writer-studio/
+Disallow: /saved
+Disallow: /profile
+
+# Sitemap
+Sitemap: https://ajqzyygzgjrydxilzzto.supabase.co/functions/v1/sitemap

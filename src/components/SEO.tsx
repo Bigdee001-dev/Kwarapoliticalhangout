@@ -75,8 +75,12 @@ const SEO: React.FC<SEOProps> = ({
       "image": [image],
       "url": fullUrl,
       ...(type === 'article' && {
-        "datePublished": date,
-        "dateModified": date,
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": fullUrl
+        },
+        "datePublished": date ? new Date(date).toISOString() : new Date().toISOString(),
+        "dateModified": date ? new Date(date).toISOString() : new Date().toISOString(),
         "author": [{
           "@type": "Person",
           "name": author || "KPH News Staff",

@@ -96,7 +96,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={isMobilePWA ? <MobileHome /> : <Home />} />
           <Route path="/people" element={<People />} />
-          <Route path="/article/:id" element={<ArticleDetail />} />
+          <Route path="/article/:slugAndId" element={<ArticleDetail />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -107,7 +107,7 @@ const AppContent = () => {
           <Route path="/news" element={<NewsCategory title="All News" topic="General" description="The latest breaking news and updates." />} />
           <Route path="/politics" element={<NewsCategory title="Politics" topic="Politics" description="Latest political updates and analysis." />} />
           <Route path="/sports" element={<SportsPage />} />
-          <Route path="/sports/article/:id" element={<SportsArticleDetail />} />
+          <Route path="/sports/article/:slugAndId" element={<SportsArticleDetail />} />
           <Route path="/saved" element={<SavedPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>

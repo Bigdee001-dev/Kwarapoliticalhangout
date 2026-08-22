@@ -5,8 +5,9 @@ import { Clock, ChevronRight, Loader2, AlertTriangle, RefreshCw, Zap, X, Play, V
 import Sidebar from '../components/Sidebar';
 import ArticleCard, { ArticleMedia } from '../components/ArticleCard';
 import { NewsService } from '../services/newsService';
-import { AdminService, GlobalAlert, AdConfig, getAbsoluteUrl } from '../services/adminService';
-import { AdUnit } from '../services/adminService';
+import { AdminService, GlobalAlert, AdConfig, getAbsoluteUrl, AdUnit } from '../services/adminService';
+import AdSpace from '../components/AdSpace';
+import { buildArticleSlugUrl } from '../utils/slugUtils';
 import { Article } from '../types';
 import SEO from '../components/SEO';
 import { toast } from 'sonner';
@@ -89,7 +90,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ featuredArticle, subFeaturedA
                   </span>
                 </div>
 
-                <Link to={`/article/${featuredArticle.id}`} className="block group/title">
+                <Link to={buildArticleSlugUrl(featuredArticle.id, featuredArticle.title)} className="block group/title">
                   <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[2.75rem] font-black text-white mb-4 sm:mb-5 leading-[1.15] font-serif drop-shadow-xl group-hover/title:text-white/90 transition-colors line-clamp-3 lg:line-clamp-none">
                     {featuredArticle.title}
                   </h2>
@@ -108,7 +109,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ featuredArticle, subFeaturedA
                   {/* CTA buttons */}
                   <div className="flex items-center gap-2.5">
                     <Link
-                      to={`/article/${featuredArticle.id}`}
+                      to={buildArticleSlugUrl(featuredArticle.id, featuredArticle.title)}
                       className="hero-cta-secondary"
                     >
                       Read Story
@@ -128,7 +129,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ featuredArticle, subFeaturedA
               className="relative group overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl min-h-[200px] sm:min-h-[220px] lg:min-h-0 lg:aspect-video shadow-xl border border-white/[0.06] bg-gray-900 flex-1 hero-sub-card"
               style={{ animationDelay: `${idx * 120}ms` }}
             >
-              <Link to={`/article/${article.id}`} className="block w-full h-full">
+              <Link to={buildArticleSlugUrl(article.id, article.title)} className="block w-full h-full">
                 <ArticleMedia
                   article={article}
                   className="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
@@ -269,7 +270,7 @@ const Home: React.FC = () => {
           <div className="overflow-hidden flex-1 relative h-6 flex items-center group">
             <div className="absolute whitespace-nowrap animate-marquee group-hover:[animation-play-state:paused] flex items-center">
               {articles.slice(0, 6).map((a, i) => (
-                <Link key={i} to={`/article/${a.id}`} className="mr-16 font-bold opacity-90 hover:opacity-100 flex items-center gap-3 cursor-pointer">
+                <Link key={i} to={buildArticleSlugUrl(a.id, a.title)} className="mr-16 font-bold opacity-90 hover:opacity-100 flex items-center gap-3 cursor-pointer">
                   <span className="w-2 h-2 bg-white/40 rounded-full shrink-0"></span> {a.title}
                 </Link>
               ))}
