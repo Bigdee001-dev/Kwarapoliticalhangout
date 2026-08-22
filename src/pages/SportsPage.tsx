@@ -16,7 +16,9 @@ const SportsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await NewsService.fetchLiveSportsNews();
+      const data = await NewsService.fetchLiveSportsNews((freshArticles) => {
+        setArticles(freshArticles);
+      });
       if (data.length === 0) {
         throw new Error("No sports news found right now.");
       }

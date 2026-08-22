@@ -17,7 +17,9 @@ const MobileHome: React.FC = () => {
   useEffect(() => {
     const fetchNews = async () => {
       setLoading(true);
-      const data = await NewsService.getLatestNews();
+      const data = await NewsService.getLatestNews('General', (freshArticles) => {
+        setArticles(freshArticles);
+      });
       setArticles(data);
       setLoading(false);
     };
