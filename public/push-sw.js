@@ -14,11 +14,14 @@ self.addEventListener('push', function(event) {
   const options = {
     body: data.body || 'You have a new notification.',
     icon: data.icon || '/logo192.png',
-    image: data.image || undefined,
     badge: '/logo192.png',
     data: data.url || '/',
     vibrate: [200, 100, 200]
   };
+
+  if (data.image && typeof data.image === 'string' && data.image.startsWith('http')) {
+    options.image = data.image;
+  }
 
   event.waitUntil(
     self.registration.showNotification(title, options)
@@ -27,11 +30,8 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
   console.log('[Service Worker] Notification click Received.');
-
   event.notification.close();
-
   const urlToOpen = event.notification.data;
-
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
       for (let i = 0; i < clientList.length; i++) {
