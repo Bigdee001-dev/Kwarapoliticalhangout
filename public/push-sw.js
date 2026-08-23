@@ -10,11 +10,13 @@ self.addEventListener('push', function(event) {
     }
   }
 
+  const baseUrl = self.location.origin;
   const title = data.title || 'KPH News';
+  
   const options = {
     body: data.body || 'You have a new notification.',
-    icon: data.icon || '/logo192.png',
-    badge: '/logo192.png',
+    icon: data.icon || (baseUrl + '/logo192.png'),
+    badge: baseUrl + '/logo192.png',
     data: data.url || '/',
     vibrate: [200, 100, 200]
   };
