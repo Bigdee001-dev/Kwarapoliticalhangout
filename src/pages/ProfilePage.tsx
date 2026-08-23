@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserCircle, Save, Bell, BellOff, Trash2 } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { profile, updateProfile, initial } = useProfile();
+  const { isSubscribed, subscribe, unsubscribe, isLoading } = usePushNotifications();
 
   const [name, setName] = useState(profile.name);
   const [email, setEmail] = useState(profile.email);
@@ -94,11 +96,20 @@ const ProfilePage: React.FC = () => {
               <button
                 type="button"
                 role="switch"
-                aria-checked={notifications}
-                onClick={() => setNotifications(!notifications)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notifications ? 'bg-kph-red' : 'bg-zinc-300'}`}
+                disabled={isLoading}
+                aria-checked={isSubscribed || notifications}
+                onClick={async () => {
+                  if (isSubscribed) {
+                    await unsubscribe();
+                    setNotifications(false);
+                  } else {
+                    await subscribe();
+                    setNotifications(true);
+                  }
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${(isSubscribed || notifications) ? 'bg-kph-red' : 'bg-zinc-300'} ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notifications ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(isSubscribed || notifications) ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
           </div>
@@ -137,3 +148,4 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
+
