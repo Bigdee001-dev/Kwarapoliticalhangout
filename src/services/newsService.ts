@@ -226,10 +226,10 @@ export const NewsService = {
           
         if (error) throw error;
         if (data) {
-          // Fire-and-forget view increment
+          // Fire-and-forget view increment using RPC
           (async () => {
             try {
-              await supabase.from('articles').update({ views: (data.views || 0) + 1 }).eq('id', id);
+              await supabase.rpc('increment_article_view', { p_article_id: id });
             } catch (e) {
               // Ignore errors
             }

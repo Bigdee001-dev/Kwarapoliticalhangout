@@ -60,24 +60,23 @@ const Dashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const [{ data: articles }, { data: writers }, { data: newsletter }] = await Promise.all([
+      const [{ data: articles }, { data: writers }, { data: newsletter }, { data: dailyViewsData }] = await Promise.all([
         supabase.from('articles').select('*'),
         supabase.from('profiles').select('*'),
-        supabase.from('newsletter').select('*')
+        supabase.from('newsletter').select('*'),
+        supabase.from('daily_article_views').select('views').eq('date', new Date().toISOString().split('T')[0])
       ]);
 
-      const midnight = getMidnightISO();
-      
       const safeArticles = articles || [];
       const totalPublished = safeArticles.filter(a => a.status === 'published' || a.status === 'Published').length;
-      const publishedToday = safeArticles.filter(a => (a.status === 'published' || a.status === 'Published') && (a.published_at || a.publishedAt || '') >= midnight).length;
+      const publishedToday = safeArticles.filter(a => (a.status === 'published' || a.status === 'Published') && (a.published_at || a.publishedAt || '').startsWith(new Date().toISOString().split('T')[0])).length;
       const pendingReview = safeArticles.filter(a => a.status === 'pending' || a.status === 'Pending').length;
       
       const activeWriters = (writers || []).filter(d => (d.role === 'writer' || d.role === 'Writer') && (d.status === 'active' || d.status === 'Active' || !d.status)).length;
       const subscribers = (newsletter || []).filter(d => d.isActive === true || d.is_active === true || d.status === 'active').length;
       
       const totalViews = safeArticles.filter(a => a.status === 'published' || a.status === 'Published').reduce((acc, a) => acc + (a.views || 0), 0);
-      const todayViews = safeArticles.filter(a => (a.status === 'published' || a.status === 'Published') && (a.published_at || a.publishedAt || '') >= midnight).reduce((acc, a) => acc + (a.views || 0), 0);
+      const todayViews = (dailyViewsData || []).reduce((acc, row) => acc + (row.views || 0), 0);
 
       return {
         totalPublished,
@@ -97,17 +96,20 @@ const Dashboard: React.FC = () => {
   const { data: viewsData, isLoading: viewsLoading } = useQuery({
     queryKey: ['views-chart'],
     queryFn: async () => {
-      const { data: articles } = await supabase.from('articles').select('*');
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('daily_article_views')
+        .select('date, views')
+        .gte('date', thirtyDaysAgo);
+        
       const dailyViewsMap: Record<string, number> = {};
       
-      (articles || []).forEach(data => {
-        const publishedDate = data.published_at || data.publishedAt;
-        if ((data.status === 'published' || data.status === 'Published') && publishedDate && publishedDate >= thirtyDaysAgo) {
-          const date = new Date(publishedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          dailyViewsMap[date] = (dailyViewsMap[date] || 0) + (data.views || 0);
-        }
+      (data || []).forEach(row => {
+        if (!row.date) return;
+        const dateObj = new Date(row.date);
+        const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dailyViewsMap[dateStr] = (dailyViewsMap[dateStr] || 0) + (row.views || 0);
       });
 
       return Object.entries(dailyViewsMap).map(([date, views]) => ({ date, views }));
