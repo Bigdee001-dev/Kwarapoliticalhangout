@@ -282,6 +282,16 @@ export const AdminService = {
       } else {
         await supabase.from('articles').update(data).eq('id', article.id);
       }
+
+      // Automatically ping search engines to index the new article immediately
+      if (article.status === 'published' || !article.status) {
+        setTimeout(() => {
+          const sitemapUrl = 'https://www.kwarapoliticalhangout.com.ng/sitemap.xml';
+          fetch(`https://www.google.com/ping?sitemap=${sitemapUrl}`, { mode: 'no-cors' }).catch(() => {});
+          fetch(`https://www.bing.com/ping?sitemap=${sitemapUrl}`, { mode: 'no-cors' }).catch(() => {});
+          console.log('Pinged search engines with updated sitemap.');
+        }, 2000); // Small delay to ensure DB transaction finishes
+      }
     } catch (error) {
       console.error("Failed to publish article", error);
     }

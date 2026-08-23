@@ -20,6 +20,7 @@ import SearchResults from './pages/SearchResults';
 import SavedPage from './pages/SavedPage';
 import WriterStudio from './pages/WriterStudio';
 import ProfilePage from './pages/ProfilePage';
+import NotFound from './pages/NotFound';
 import AdminApp from '../apps/admin/src/App';
 import CookieBanner from './components/CookieBanner';
 import BottomNav from './components/BottomNav';
@@ -110,6 +111,7 @@ const AppContent = () => {
           <Route path="/sports/article/:slugAndId" element={<SportsArticleDetail />} />
           <Route path="/saved" element={<SavedPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </LayoutWrapper>
       <CookieBanner />

@@ -24,7 +24,7 @@ serve(async (req: Request) => {
   try {
     // Determine the base URL (this would be your production URL in real life)
     const url = new URL(req.url);
-    const origin = Deno.env.get("APP_URL") || "https://kwarapoliticalhangout.com"; // Replace with real production URL later
+    const origin = Deno.env.get("APP_URL") || "https://www.kwarapoliticalhangout.com.ng"; // Replace with real production URL later
 
     // Fetch the 1000 most recent published articles
     const { data: articles, error } = await supabase
