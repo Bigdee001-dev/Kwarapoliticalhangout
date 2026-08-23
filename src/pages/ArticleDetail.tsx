@@ -9,6 +9,7 @@ import {
   ArrowRight, Heart, UserCircle2, MessageCircle, Video, Play, Volume2, VolumeX,
   ChevronDown, AlertTriangle
 } from 'lucide-react';
+import AdSlot from '../components/AdSlot';
 import Sidebar from '../components/Sidebar';
 import Logo from '../components/Logo';
 import { NewsService } from '../services/newsService';
@@ -550,7 +551,8 @@ const ArticleDetail: React.FC = () => {
       {/* Sidebar Column */}
       <aside className="lg:col-span-4 py-8 lg:py-16 space-y-10 lg:space-y-12 w-full max-w-full overflow-hidden">
         <div className="lg:sticky lg:top-24 space-y-10 lg:space-y-12">
-          <Sidebar />
+          <AdSlot format="rectangle" className="mb-8" />
+              <Sidebar />
 
           {/* Related Articles */}
           <div className="space-y-6">

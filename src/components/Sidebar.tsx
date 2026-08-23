@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Mail, Facebook, Twitter, Linkedin, Youtube, ArrowRight, Check, Instagram, Loader2, Image as ImageIcon } from 'lucide-react';
+import AdSlot from './AdSlot';
 import ArticleCard from './ArticleCard';
 import { AdminService, AdConfig, getAbsoluteUrl } from '../services/adminService';
 import { NewsService } from '../services/newsService';
@@ -85,6 +86,7 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
+      <AdSlot format="rectangle" />
       {/* Popular Posts */}
       <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm">
         <div className="flex justify-between items-center mb-4">

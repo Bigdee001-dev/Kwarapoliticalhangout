@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, ChevronRight, Loader2, AlertTriangle, RefreshCw, Zap, X, Play, Volume2, VolumeX, Video } from 'lucide-react';
+import AdSlot from '../components/AdSlot';
 import Sidebar from '../components/Sidebar';
 import ArticleCard, { ArticleMedia } from '../components/ArticleCard';
 import { NewsService } from '../services/newsService';
@@ -322,7 +323,8 @@ const Home: React.FC = () => {
 
           </div>
           <div className="lg:col-span-4 space-y-10">
-            <Sidebar />
+            <AdSlot format="rectangle" className="mb-8 hidden lg:flex" />
+                <Sidebar />
           </div>
         </div>
       </main>
