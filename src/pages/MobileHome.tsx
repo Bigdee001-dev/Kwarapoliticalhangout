@@ -4,6 +4,7 @@ import { Loader2, Search } from 'lucide-react';
 import { NewsService } from '../services/newsService';
 import { Article } from '../types';
 import Logo from '../components/Logo';
+import { PushNotificationToggle } from '../components/PushNotificationToggle';
 import { motion, AnimatePresence } from 'motion/react';
 import { useProfile } from '../hooks/useProfile';
 
@@ -58,6 +59,7 @@ const MobileHome: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <PushNotificationToggle className="scale-[0.85] mr-1" />
           <Link to="/profile" className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-sm shrink-0 hover:bg-slate-300 transition-colors">
             {initial}
           </Link>

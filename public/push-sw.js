@@ -13,7 +13,8 @@ self.addEventListener('push', function(event) {
   const title = data.title || 'KPH News';
   const options = {
     body: data.body || 'You have a new notification.',
-    icon: '/logo192.png',
+    icon: data.icon || '/logo192.png',
+    image: data.image || undefined,
     badge: '/logo192.png',
     data: data.url || '/',
     vibrate: [200, 100, 200]
