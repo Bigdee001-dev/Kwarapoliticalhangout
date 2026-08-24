@@ -263,6 +263,11 @@ const ArticleEditor: React.FC = () => {
 
       if (status === 'published') {
         articleData.publishedAt = now;
+        if (!isEdit || !article?.date) {
+            articleData.date = now;
+        }
+      } else if (!isEdit) {
+        articleData.date = now;
       }
 
       if (isEdit) {
@@ -293,6 +298,9 @@ const ArticleEditor: React.FC = () => {
       }
       queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      
+      // Clear the frontend news cache so the new article appears instantly
+      localStorage.removeItem('kph_news_cache_v2');
     } catch (error: any) {
       console.error('Save Article Error:', error);
       toast.error(`Failed to save article: ${error.message || 'Unknown error'}`);

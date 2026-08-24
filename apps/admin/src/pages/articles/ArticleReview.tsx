@@ -136,11 +136,15 @@ const ArticleReview: React.FC = () => {
         .update({
           status: 'published',
           publishedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          date: new Date().toISOString()
         })
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Clear frontend cache so news page updates instantly
+      localStorage.removeItem('kph_news_cache_v2');
     },
     onSuccess: () => {
       toast.success('Article published globally.');

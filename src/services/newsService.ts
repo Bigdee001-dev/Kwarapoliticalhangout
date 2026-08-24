@@ -2,7 +2,7 @@
 import { supabase } from './supabase';
 import { Article, Comment } from '../types';
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minute freshness
+const CACHE_DURATION = 30 * 1000; // 30 seconds freshness (down from 5 mins for real-time news)
 interface CacheEntry {
   timestamp: number;
   data: Article[];
@@ -48,7 +48,7 @@ const mapArticleData = (d: any): Article => ({
   content: d.content,
   category: d.category,
   author: d.profiles?.name || d.author_name || d.authorName || d.author_id || d.authorId || 'KPH Desk',
-  date: d.date || d.created_at || d.createdAt,
+  date: d.date || d.published_at || d.publishedAt || d.created_at || d.createdAt,
   readTime: d.read_time || d.readTime || '5 min read',
   imageUrl: d.image_url || d.imageUrl || '',
   videoUrl: d.video_url || d.videoUrl || '',
@@ -61,6 +61,11 @@ const mapArticleData = (d: any): Article => ({
 });
 
 export const NewsService = {
+  clearCache() {
+    for (const key in newsCache) delete newsCache[key];
+    articleDetailCache.clear();
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+  },
   async getLatestNews(topic: string = 'General', onUpdate?: (articles: Article[]) => void): Promise<Article[]> {
     const cacheKey = `latest_${topic}`;
     const cached = newsCache[cacheKey];
@@ -70,7 +75,7 @@ export const NewsService = {
       try {
         let query = supabase
           .from('articles')
-          .select(`id, title, excerpt, content, category, author_name, date, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
+          .select(`id, title, excerpt, content, category, author_name, date, created_at, published_at, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
           .eq('status', 'published')
           .order('date', { ascending: false })
           .limit(50);
@@ -348,7 +353,7 @@ export const NewsService = {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select(`id, title, excerpt, category, author_name, date, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
+        .select(`id, title, excerpt, category, author_name, date, created_at, published_at, read_time, image_url, imageUrl, video_url, source_url, source_name, is_featured, status, views, likes, profiles:author_id(name)`)
         .eq('status', 'published')
         .or(`title.ilike.%${queryStr}%,excerpt.ilike.%${queryStr}%`)
         .order('date', { ascending: false })
