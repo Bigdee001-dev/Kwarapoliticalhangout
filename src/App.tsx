@@ -86,6 +86,35 @@ const AppContent = () => {
   const { isStandalone } = useInstallPrompt();
   const isMobile = useMediaQuery('(max-width: 1023px)');
   
+  // Listen for push notifications routed to the foreground
+  React.useEffect(() => {
+    const handleSWMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'PUSH_RECEIVED') {
+        const payload = event.data.payload;
+        toast(payload.title || 'KPH News', {
+          description: payload.body || 'A new article has been published.',
+          duration: 10000,
+          action: payload.data ? {
+            label: 'View',
+            onClick: () => {
+              window.location.href = payload.data;
+            }
+          } : undefined
+        });
+      }
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleSWMessage);
+    }
+    
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+      }
+    };
+  }, []);
+
   // Only serve the mobile-optimized PWA layout if it's both standalone AND a mobile screen
   const isMobilePWA = isStandalone && isMobile;
   

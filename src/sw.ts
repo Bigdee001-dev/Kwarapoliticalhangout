@@ -79,13 +79,32 @@ self.addEventListener('push', (event) => {
 
   // Wrap in a try-catch inside waitUntil to guarantee a fallback notification
   event.waitUntil(
-    self.registration.showNotification(title, options).catch((err) => {
-      console.error('[Service Worker] Failed to show primary notification', err);
-      // Fallback guarantees we don't violate iOS/Android requirements of showing a notification on push
-      return self.registration.showNotification('KPH News', {
-        body: 'A new article has been published.',
-        icon: baseUrl + '/logo192.png',
-        data: '/',
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      const isFocused = clientList.some((client) => client.visibilityState === 'visible');
+      
+      if (isFocused) {
+        // App is open and focused! Send a message to the app to show an in-app toast
+        clientList.forEach((client) => {
+          client.postMessage({
+            type: 'PUSH_RECEIVED',
+            payload: { title, ...options }
+          });
+        });
+        
+        // We still need to show a system notification to satisfy Chrome's userVisibleOnly requirement,
+        // but we make it silent so it doesn't double-ping the user.
+        options.silent = true;
+      }
+
+      return self.registration.showNotification(title, options).catch((err) => {
+        console.error('[Service Worker] Failed to show primary notification', err);
+        // Fallback guarantees we don't violate iOS/Android requirements of showing a notification on push
+        return self.registration.showNotification('KPH News', {
+          body: 'A new article has been published.',
+          icon: baseUrl + '/logo192.png',
+          data: '/',
+          silent: isFocused
+        });
       });
     })
   );
