@@ -74,7 +74,15 @@ serve(async (req: Request) => {
           auth: sub.auth
         }
       };
-      return webpush.sendNotification(pushSubscription, notificationPayload);
+      
+      const options = {
+        TTL: 86400, // 24 hours
+        headers: {
+          'urgency': 'high'
+        }
+      };
+      
+      return webpush.sendNotification(pushSubscription, notificationPayload, options);
     })
   );
 

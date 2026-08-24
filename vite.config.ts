@@ -15,6 +15,9 @@ export default defineConfig(({ mode, command }) => {
         react(), 
         tailwindcss(),
         VitePWA({
+          strategies: 'injectManifest',
+          srcDir: 'src',
+          filename: 'sw.ts',
           registerType: 'autoUpdate',
           manifestFilename: 'manifest.json',
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'logo.svg'],
@@ -56,36 +59,9 @@ export default defineConfig(({ mode, command }) => {
               }
             ]
           },
-          workbox: {
-            importScripts: ['/push-sw.js'],
+          injectManifest: {
             globPatterns: command === 'serve' ? [] : ['**/*.{js,css,html,ico,png,svg}'],
-            runtimeCaching: [
-              {
-                urlPattern: /^https:\/\/ajqzyygzgjrydxilzzto\.supabase\.co\/rest\/v1\/.*/i,
-                handler: 'NetworkFirst',
-                options: {
-                  cacheName: 'supabase-api-cache',
-                  expiration: {
-                    maxEntries: 50,
-                    maxAgeSeconds: 60 * 60 * 24 // <== 1 day
-                  },
-                  cacheableResponse: {
-                    statuses: [0, 200]
-                  }
-                }
-              },
-              {
-                urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-                handler: 'CacheFirst',
-                options: {
-                  cacheName: 'image-cache',
-                  expiration: {
-                    maxEntries: 100,
-                    maxAgeSeconds: 60 * 60 * 24 * 30 // <== 30 days
-                  }
-                }
-              }
-            ]
+            maximumFileSizeToCacheInBytes: 3000000
           },
           devOptions: {
             enabled: true,
