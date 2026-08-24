@@ -68,7 +68,9 @@ self.addEventListener('push', (event) => {
     badge: baseUrl + '/logo192.png',
     data: data.url || '/', // URL to open on click
     vibrate: [200, 100, 200],
-    requireInteraction: true // Keep notification on screen until user interacts
+    requireInteraction: true, // Keep notification on screen until user interacts
+    tag: data.url ? `article-${data.url}` : 'kph-news',
+    renotify: true
   };
 
   if (data.image && typeof data.image === 'string' && data.image.startsWith('http')) {

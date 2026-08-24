@@ -78,7 +78,8 @@ serve(async (req: Request) => {
       const options = {
         TTL: 86400, // 24 hours
         headers: {
-          'urgency': 'high'
+          'urgency': 'high',
+          'Topic': record.id ? record.id.toString() : 'kph-news'
         }
       };
       
